@@ -19,3 +19,13 @@
 4. 실제 API 연동
 5. 로딩 / 에러 / Empty State 처리
 6. 반응형 UI 및 세부 UX 개선
+# PersonaLab 현재 상태
+
+- 프런트엔드 데모 구현 완료
+- GitHub 저장소: `tmdrbtls/persona-lab`
+- 기본 브랜치: `main`
+- Vercel 프로젝트: `persona-lab`
+- 프로덕션 URL: <https://persona-lab-blue.vercel.app>
+- GitHub `main` 브랜치 푸시 시 Vercel 자동 배포 연결
+
+마지막 갱신: 2026-09-23
