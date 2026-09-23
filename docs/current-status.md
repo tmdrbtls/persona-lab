@@ -29,5 +29,6 @@
 - GitHub `main` 브랜치 푸시 시 Vercel 자동 배포 연결
 - Vercel GitHub App 접근 범위: `tmdrbtls/persona-lab` 저장소로 제한
 - 자동 배포 최종 검증: 2026-09-23
+- 별도 배포 바로가기 HTML 제거. React/Vite 소스를 Vercel이 직접 빌드
 
 마지막 갱신: 2026-09-23

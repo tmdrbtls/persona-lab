@@ -279,7 +279,6 @@ AI가 생성한 응답에는 `AI 생성 응답 · Synthetic User Response`라는
 ```text
 2026-wemeet-FRONT-DEMO/
 ├─ index.html                 # Vite 진입 HTML
-├─ persona-lab.html           # 배포 사이트 바로가기 HTML
 ├─ package.json               # 실행 및 빌드 명령과 의존성
 ├─ package-lock.json          # 설치된 패키지 버전 잠금
 ├─ src/
