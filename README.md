@@ -8,6 +8,9 @@ AI Persona의 사용 의향과 프로토타입 행동을 연결해 보여주는 
 
 GitHub의 `main` 브랜치가 Vercel 프로젝트에 연결되어 있습니다. 이 저장소에 푸시된 React/Vite 소스 전체를 Vercel이 직접 빌드하고 같은 프로덕션 주소에 자동 배포합니다.
 
+통합 UI 브랜치 `feat/integrated-personalab-ux`의 배포 미리보기: <https://persona-4a03ewjy0-ssg03177-6149.vercel.app>
+미리보기는 2026-10-03 커밋 기준이며, 위 프로덕션 주소는 `main` 반영 후 갱신됩니다.
+
 ## 로컬 실행
 
 ```bash
