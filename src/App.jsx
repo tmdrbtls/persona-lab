@@ -1,88 +1,21 @@
-import { useCallback, useEffect, useState } from "react";
-import { Menu } from "lucide-react";
-import Sidebar from "./components/layout/Sidebar";
-import { studies } from "./data/demoData";
-import IntegratedCreatePage from "./pages/IntegratedCreatePage";
-import GenericPage from "./pages/GenericPage";
-import HomePage from "./pages/HomePage";
-import ReportPage from "./pages/ReportPage";
-import StudiesPage from "./pages/StudiesPage";
-import RunPage from "./pages/RunPage";
-import { getSetupDraftMeta } from "./data/setupDraft";
+import { useEffect, useState } from 'react';
+import { ArrowLeft, ArrowRight, RotateCcw, ScanLine, X } from 'lucide-react';
+import { countAt, groups, personas, stages, tests } from './concepts/data';
+import './concepts/xray.css';
 
-function initialStudies() {
-  try {
-    const saved = JSON.parse(localStorage.getItem("personalab-integrated-studies") || "[]");
-    return [...saved.filter(s => s?.integrated), ...studies];
-  } catch { return [...studies]; }
-}
-
-export default function App() {
-  const [page, setPage] = useState("home");
-  const [studyList, setStudyList] = useState(initialStudies);
-  const [studyId, setStudyId] = useState(studies[0].id);
-  const [focusPersonaId, setFocusPersonaId] = useState(null);
-  const [detailTab, setDetailTab] = useState("overview");
-  const [collapsed, setCollapsed] = useState(false);
-  const [mobile, setMobile] = useState(false);
-  const [draftMeta, setDraftMeta] = useState(getSetupDraftMeta);
-
-  const study = studyList.find(s => s.id === studyId) || studyList[0];
-  useEffect(() => {
-    try { localStorage.setItem("personalab-integrated-studies", JSON.stringify(studyList.filter(s => s.integrated))); }
-    catch { /* 파일 이미지가 브라우저 저장 용량을 넘으면 현재 세션에서 계속 사용 */ }
-  }, [studyList]);
-  const updateStudy = useCallback((id, changes) => setStudyList(list => list.map(s => s.id === id ? { ...s, ...changes } : s)), []);
-  const goReport = (selectedStudy) => {
-    setStudyId(selectedStudy.id);
-    setDetailTab("overview");
-    setPage("report");
-  };
-  const openResult = () => { setDetailTab("report"); setPage("report"); };
-  const goRun = (selectedStudy = study, personaId = null) => {
-    setStudyId(selectedStudy.id);
-    setFocusPersonaId(personaId);
-    setPage("run");
-  };
-  const finishCreate = (newStudy) => {
-    setStudyList(list => [newStudy, ...list]);
-    goRun(newStudy);
-  };
-
-  const changePage = (nextPage) => {
-    setPage(nextPage);
-    setMobile(false);
-  };
-
-  const views = {
-    home: <HomePage goReport={goReport} setPage={setPage} studyList={studyList} draftMeta={draftMeta} />,
-    studies: <StudiesPage goReport={goReport} setPage={setPage} studyList={studyList} draftMeta={draftMeta} />,
-    report: <ReportPage key={study.id} study={study} setPage={setPage} goRun={goRun} initialTab={detailTab} />,
-    create: <IntegratedCreatePage setPage={setPage} finish={finishCreate} onDraftMetaChange={setDraftMeta} />,
-    run: study?.integrated ? <RunPage key={study.id} study={study} onUpdate={updateStudy} setPage={setPage} openReport={openResult} focusPersonaId={focusPersonaId} /> : <GenericPage type="runs" studyList={studyList} goReport={goReport} />,
-  };
-
-  return (
-    <div
-      className={`shell ${collapsed ? "collapsed" : ""} ${mobile ? "mobile-open" : ""}`}
-    >
-      <Sidebar
-        page={page}
-        setPage={changePage}
-        collapsed={collapsed}
-        setCollapsed={setCollapsed}
-      />
-      <button
-        className="global-mobile icon-btn"
-        onClick={() => setMobile(true)}
-        aria-label="메뉴 열기"
-      >
-        <Menu size={20} />
-      </button>
-      <div className="overlay" onClick={() => setMobile(false)} />
-      <section className="main">
-        {views[page] ?? <GenericPage type={page} studyList={studyList} goReport={goReport} />}
-      </section>
-    </div>
-  );
-}
+function useRoute(){const [route,setRoute]=useState(location.pathname);useEffect(()=>{const change=()=>setRoute(location.pathname);addEventListener('popstate',change);return()=>removeEventListener('popstate',change)},[]);const go=path=>{history.pushState({},'',path);setRoute(path);window.scrollTo(0,0)};return[route,go]}
+function Logo(){return <span className="logo"><span className="logo-icon">P</span> PersonaLab <small>사용 흐름 분석</small></span>}
+function Screen({stage,selected=false,onClick}){const label=stages.find(s=>s.key===stage)?.name||'가입 완료';return <button className={`screen-button ${selected?'selected':''}`} onClick={onClick}><span className="screen-thumb"><i/><i/><i/><i/></span><span><strong>{label} 화면</strong><small>{stage==='complete'?'과제 완료':`${countAt(stage,100)}명 이탈`}</small></span></button>}
+function PersonaDrawer({persona,onClose}){if(!persona)return null;const dropped=persona.end!=='complete';return <aside className="persona-drawer"><button className="close" onClick={onClose} aria-label="상세 닫기"><X size={20}/></button><span className="eyebrow">개별 사용자 근거</span><h2>Persona #{persona.id}</h2><p className="group-name">{persona.group}</p><div className="evidence-section"><small>사용 전 의견</small><strong>“{persona.opinion}”</strong></div><div className="evidence-section"><small>실제 행동</small><strong>{persona.path.join(' → ')}</strong></div><div className="evidence-section"><small>말과 행동</small><strong>{persona.positive&&dropped?'불일치 · 사용 전 긍정, 실제 이탈':'관찰 결과 확인'}</strong></div><div className="evidence-section"><small>{dropped?'이탈 이유':'완료 결과'}</small><strong>“{persona.reason}”</strong></div><div className="evidence-section"><small>결과 근거 · 관찰 화면</small><Screen stage={persona.end}/></div><p className="simulation-note">고정된 데모 시뮬레이션입니다. 내부 추론 과정은 포함하지 않습니다.</p></aside>}
+const splitPos={signup:255,profile:500,interests:745};
+const pathFor=p=>{const y=p.id<=40?36+(p.id-1)*2:p.id<=70?133+(p.id-41)*2:218+(p.id-71)*2;const start=`M 112 ${y}`;if(p.end==='complete')return `${start} C 310 ${y}, 720 ${y+2}, 965 ${y+5}`;const x=splitPos[p.end],dy=p.end==='signup'?70:p.end==='profile'?160:250;return `${start} C ${x-90} ${y}, ${x-45} ${y}, ${x} ${y+7} C ${x+25} ${y+15}, ${x+25} ${dy}, ${x+110} ${dy}`};
+function Threads({selected,onPersona}){return <><svg className="xray-threads" viewBox="0 0 1000 330" role="img" aria-label="100명의 개별 사용자 경로"><text x="20" y="18" className="thread-title">100명의 개별 경로</text><text x="4" y="80" className="thread-label">대학생 40명</text><text x="4" y="171" className="thread-label">사회초년생 30명</text><text x="4" y="256" className="thread-label">직장인 30명</text>{personas.map(p=><path key={p.id} d={pathFor(p)} className="thread-path" stroke={p.color} opacity={selected && p.end!==selected ? 0.13 : 0.7} onClick={()=>onPersona(p)}><title>Persona #{p.id} · {p.group} · {p.end==='complete'?'완료':stages.find(s=>s.key===p.end)?.name+' 이탈'}</title></path>)}<text x="112" y="318" className="thread-label">선을 누르면 개별 사용자 근거를 볼 수 있습니다</text></svg><div className="xray-hint">문제 지점을 선택하면 관련된 사용자 경로만 진하게 표시됩니다.</div></>}
+function Stream({progress}){const ratio=progress/100;const shown=(n)=>Math.min(n,Math.round(n*ratio));return <svg className="flow-svg" viewBox="0 0 1000 300" role="img" aria-label="100명의 사용 흐름과 단계별 이탈"><defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8" fill="#448d92"/></marker></defs><path className="flow-line" d="M 35 105 C 210 105, 245 105, 310 105" strokeWidth={78*ratio} opacity={ratio?1:0}/><path className="flow-line" d="M 310 105 L 535 105" strokeWidth={68*ratio} opacity={progress>25?1:.15}/><path className="flow-line" d="M 535 105 L 760 105" strokeWidth={55*ratio} opacity={progress>50?1:.15}/><path className="flow-line" d="M 760 105 L 960 105" strokeWidth={39*ratio} opacity={progress>75?1:.15} markerEnd="url(#arrow)"/><path className="flow-split" d="M 270 112 C 290 150, 310 195, 395 195" strokeWidth={13*ratio} opacity={progress>30?1:0}/><path className="flow-split" d="M 510 112 C 530 165, 545 235, 620 235" strokeWidth={16*ratio} opacity={progress>55?1:0}/><path className="flow-split" d="M 735 112 C 755 155, 775 195, 870 195" strokeWidth={25*ratio} opacity={progress>78?1:0}/><text x="230" y="205" className="flow-number" opacity={progress>30?1:0}>{shown(13)}명</text><text x="475" y="247" className="flow-number" opacity={progress>55?1:0}>{shown(16)}명</text><text x="710" y="210" className="flow-number" opacity={progress>78?1:0}>{shown(25)}명</text><text x="925" y="72" className="flow-label" opacity={progress>90?1:0}>46명 완료</text><text x="236" y="229" className="flow-label" opacity={progress>30?1:0}>회원가입 이탈</text><text x="477" y="274" className="flow-label" opacity={progress>55?1:0}>정보 입력 이탈</text><text x="710" y="235" className="flow-label" opacity={progress>78?1:0}>관심사 선택 이탈</text></svg>}
+function FlowExplorer({compact=false}){const [progress,setProgress]=useState(0),[playing,setPlaying]=useState(true),[xray,setXray]=useState(false),[selected,setSelected]=useState(null),[persona,setPersona]=useState(null);useEffect(()=>{if(!playing||progress>=100)return;const t=setTimeout(()=>setProgress(v=>v+1),compact?40:50);return()=>clearTimeout(t)},[progress,playing,compact]);const matching=selected?personas.filter(p=>p.end===selected):[];const restart=()=>{setProgress(0);setPlaying(true);setXray(false);setSelected(null);setPersona(null)};return <div className="xray-frame"><div className="frame-head"><div><span className="eyebrow">사용 흐름 · 데모 시뮬레이션</span><h2>{progress===100?'100명의 행동 흐름이 완성됐습니다':'사용자 흐름을 형성하고 있습니다'}</h2></div><div className="frame-actions"><span>{progress} / 100명</span><button className="quiet" onClick={restart}><RotateCcw size={14}/> 다시 보기</button>{progress<100&&!compact&&<button className="quiet" onClick={()=>setPlaying(!playing)}>{playing?'일시정지':'계속'}</button>}{progress<100&&!compact&&<button className="quiet" onClick={()=>{setProgress(100);setPlaying(false)}}>결과 바로 보기</button>}<button className={`quiet ${xray?'active':''}`} onClick={()=>setXray(!xray)}><ScanLine size={15}/> {xray?'흐름으로 보기':'X-Ray 분석'}</button></div></div><div className="flow-zone"><div className="flow-caption"><span>시작 · 회원가입 → 정보 입력 → 관심사 선택 → 과제 완료</span><strong>{progress}명 시작</strong></div>{xray?<Threads selected={selected} onPersona={setPersona}/>:<Stream progress={progress}/>}</div><div className="screen-row">{stages.map(stage=><Screen key={stage.key} stage={stage.key} selected={selected===stage.key} onClick={()=>setSelected(stage.key)}/>)}</div><div className="frame-bottom"><span>화면을 선택하면 이탈 이유와 개별 사용자 근거를 확인할 수 있습니다.</span><strong>가장 큰 이탈 · 관심사 선택 25명</strong></div>{selected&&<div className="problem-card"><button className="close" onClick={()=>setSelected(null)} aria-label="문제 지점 닫기"><X size={17}/></button><span className="eyebrow">문제 지점 · {stages.find(s=>s.key===selected)?.name} 화면</span><h3>{matching.length}명이 이 화면에서 멈췄습니다</h3><p>가장 많이 나온 이유: “{stages.find(s=>s.key===selected)?.reason}”</p><div className="group-counts">{groups.map(g=><span key={g.name}>{g.name} {matching.filter(p=>p.group===g.name).length}명</span>)}</div><p>사용 전 긍정 의견을 보인 사용자: {matching.filter(p=>p.positive).length}명</p><div className="persona-buttons">{matching.slice(0,compact?8:25).map(p=><button key={p.id} onClick={()=>setPersona(p)}>Persona #{p.id}</button>)}</div></div>}<PersonaDrawer persona={persona} onClose={()=>setPersona(null)}/></div>}
+function Header({go,route}){return <header className="topbar"><button className="logo-button" onClick={()=>go('/')}><Logo/></button><nav><button className={route==='/tests'?'active':''} onClick={()=>go('/tests')}>테스트</button><button onClick={()=>go('/create')}>새 테스트</button></nav></header>}
+function Home({go}){return <><main className="xray-hero"><div className="hero-intro"><div><span className="eyebrow">PersonaLab · 행동을 따라가면 이유가 보입니다</span><h1>100명의 행동을<br/><em>하나의 흐름으로.</em></h1><p>말과 행동이 달라진 지점을 따라가 원인을 찾습니다.</p></div><button className="primary" onClick={()=>go('/create')}>+ 새 테스트 만들기 <ArrowRight size={17}/></button></div><FlowExplorer compact/></main><section className="teaser"><div><span className="eyebrow">말한 것 / 실제 행동</span><h3>사용 전 의견과 완료 결과를 나란히 봅니다.</h3><div className="teaser-metrics"><b>72명</b><span>→</span><b>46명</b></div></div><div><span className="eyebrow">왜 달랐을까요?</span><h3>멈춘 화면에서 사용자 근거까지.</h3><p>이탈 지점을 누르고, X-Ray로 개별 경로를 펼쳐보세요. 모든 숫자는 데모 시뮬레이션입니다.</p></div></section></>}
+function Tests({go}){return <main className="content"><div className="page-title"><div><span className="eyebrow">테스트 목록</span><h1>분석할 테스트</h1><p>말과 행동의 차이, 가장 큰 문제 지점을 먼저 확인하세요.</p></div><button className="primary" onClick={()=>go('/create')}>+ 새 테스트 만들기</button></div><div className="test-table">{tests.map((t,i)=><button className="test-row" key={t.name} onClick={()=>go('/tests/signup')}><span>0{i+1}</span><span><strong>{t.name}</strong><small>{i===0?'100명 참여 · 말과 실제 행동의 차이 26명':t.detail}</small></span><span className="test-preview">{t.secondary}</span><span className="test-status">{t.status}</span><ArrowRight size={18}/></button>)}</div><p className="simulation-note">대표 테스트 외 항목은 서비스 구성 예시이며, 선택하면 대표 데모로 이동합니다.</p></main>}
+function Create({go}){const [step,setStep]=useState(0),[product,setProduct]=useState('모아'),[task,setTask]=useState('회원가입을 완료해 주세요');const labels=['제품','프로토타입','AI 사용자','테스트 준비'];return <main className="content"><div className="page-title"><div><span className="eyebrow">새 테스트 만들기</span><h1>{labels[step]}</h1><p>제품과 화면, AI 사용자를 차례대로 준비합니다.</p></div></div><div className="steps">{labels.map((x,i)=><span key={x} className={i===step?'current':''}>{i+1}. {x}</span>)}</div><div className="create-card">{step===0?<><h2>어떤 제품을 살펴볼까요?</h2><label>제품 이름<input value={product} onChange={e=>setProduct(e.target.value)}/></label><label>사용 과제<input value={task} onChange={e=>setTask(e.target.value)}/></label><p>입력한 내용은 이번 브라우저의 데모에만 사용됩니다.</p></>:step===1?<><h2>사용자가 지날 화면을 확인하세요</h2><p>데모 프로토타입의 세 화면이 과제 흐름과 연결되어 있습니다.</p><div className="screen-grid">{stages.map((s,i)=><div key={s.key}><span>0{i+1}</span><strong>{s.name}</strong><small>프로토타입 화면 연결됨</small></div>)}</div></>:step===2?<><h2>AI 사용자 100명</h2><p>세 그룹의 경로가 하나의 사용 흐름으로 합쳐집니다.</p><div className="groups-grid">{groups.map(g=><div key={g.name}><strong>{g.name}</strong><b>{g.count}명</b></div>)}</div></>:<><h2>사용 흐름을 만들 준비가 됐습니다</h2><p>{product}의 “{task}” 과제를 100명의 AI 사용자가 수행합니다.</p><div className="merge-preview">{groups.map(g=><span key={g.name}>{g.name} {g.count}</span>)}</div><p className="simulation-note">테스트 시작을 누르면 고정된 데모 사용 흐름이 형성됩니다.</p></>}</div><div className="create-actions">{step>0&&<button className="quiet" onClick={()=>setStep(step-1)}><ArrowLeft size={15}/> 이전</button>}<button className="primary" onClick={()=>step===3?go('/tests/signup/run'):setStep(step+1)}>{step===3?'테스트 시작':'다음 단계'} <ArrowRight size={15}/></button></div></main>}
+function Detail({go}){return <main className="content"><button className="back" onClick={()=>go('/tests')}><ArrowLeft size={15}/> 테스트 목록</button><div className="page-title"><div><span className="eyebrow">완료된 테스트 · 데모 시뮬레이션</span><h1>신규 회원가입 경험</h1><p>100명이 회원가입 화면을 사용한 결과입니다.</p></div><button className="primary" onClick={()=>go('/tests/signup/results')}>결과 분석하기 <ArrowRight size={16}/></button></div><div className="overview-grid"><div><small>사용 전 긍정 의견</small><strong>72명</strong></div><div><small>실제 과제 완료</small><strong>46명</strong></div><div className="gap"><small>집계 차이</small><strong>26명</strong></div></div><div className="next-step"><h2>다음에 할 일</h2><p>사용 흐름에서 사람들이 멈춘 화면을 확인하고, X-Ray로 개별 경로를 살펴보세요.</p><button onClick={()=>go('/tests/signup/results')}>결과 분석 열기 <ArrowRight size={16}/></button></div></main>}
+function Results({go,run=false}){return <main className="content"><button className="back" onClick={()=>go('/tests/signup')}><ArrowLeft size={15}/> 테스트 개요</button><div className="page-title"><div><span className="eyebrow">신규 회원가입 경험 · 데모 시뮬레이션</span><h1>{run?'테스트 실행':'말과 실제 행동, 얼마나 달랐을까요?'}</h1><p>각 이탈 흐름은 실제 프로토타입 화면과 연결됩니다.</p></div>{run&&<button className="quiet" onClick={()=>go('/tests/signup/results')}>결과 분석하기 <ArrowRight size={15}/></button>}</div><div className="report-intro"><div><span className="eyebrow">사용 전 의견과 실제 행동</span><h2>긍정 의견 72명, 과제 완료 46명</h2><p>두 집계 사이에는 26명의 차이가 있습니다. 아래 흐름에서 이탈이 발생한 화면과 개별 행동을 확인하세요.</p></div><div className="comparison-chart"><div><span>긍정 의견</span><i style={{width:'72%'}}/>72명</div><div><span>과제 완료</span><i style={{width:'46%'}}/>46명</div></div></div><FlowExplorer key={run?'run':'result'}/></main>}
+export default function App(){const [route,go]=useRoute();return <div className="xray-app"><Header go={go} route={route}/>{route==='/tests'?<Tests go={go}/>:route==='/create'?<Create go={go}/>:route==='/tests/signup'?<Detail go={go}/>:route==='/tests/signup/run'?<Results go={go} run/>:route==='/tests/signup/results'?<Results go={go}/>:<Home go={go}/>}<footer><Logo/><span>인원과 행동은 UX 비교를 위한 고정 데모 시뮬레이션입니다.</span></footer></div>}

@@ -1,0 +1,8 @@
+export const stages=[{key:'signup',name:'회원가입',drop:13,reason:'가입 단계에서 필요한 정보를 먼저 확인하고 싶어요.'},{key:'profile',name:'정보 입력',drop:16,reason:'입력해야 할 정보가 너무 많아요.'},{key:'interests',name:'관심사 선택',drop:25,reason:'선택해야 할 항목이 너무 많아요.'}];
+export const groups=[{name:'대학생',count:40,color:'#f0a45a'},{name:'사회초년생',count:30,color:'#6e9bd7'},{name:'직장인',count:30,color:'#82bea8'}];
+const ranges={signup:[[1,5],[41,44],[71,74]],profile:[[6,10],[45,50],[75,79]],interests:[[11,23],[37,37],[51,57],[80,83]]};
+export const personas=Array.from({length:100},(_,index)=>{const id=index+1;const group=groups[id<=40?0:id<=70?1:2];const end=stages.find(stage=>ranges[stage.key].some(([a,b])=>id>=a&&id<=b))?.key||'complete';const positive=id<=72;return{id,group:group.name,color:group.color,end,positive,opinion:positive?'사용해보고 싶어요.':'사용 전에 조금 더 살펴보고 싶어요.',reason:stages.find(s=>s.key===end)?.reason||'주어진 회원가입 과제를 마쳤어요.',path:['시작',...stages.slice(0,end==='complete'?3:stages.findIndex(s=>s.key===end)+1).map(s=>s.name),end==='complete'?'과제 완료':'이탈']}});
+export const summary={started:100,positive:72,complete:46,gap:26};
+export const tests=[{name:'신규 회원가입 경험',status:'완료',detail:'100명 참여 · 46명 완료',secondary:'가장 큰 이탈  관심사 선택 · 25명'},{name:'쇼핑 검색 경험',status:'초안',detail:'검색 화면과 탐색 과제 설정 중',secondary:'프로토타입 연결 전'},{name:'결제 과정 테스트',status:'준비 중',detail:'결제 과제와 AI 사용자 구성 중',secondary:'테스트 시작 전'},{name:'온보딩 개선 테스트',status:'완료',detail:'80명 참여 · 52명 완료',secondary:'가장 큰 이탈  첫 설정 · 12명'}];
+export const stageForProgress=count=>count<26?'signup':count<54?'profile':'interests';
+export const countAt=(key,count)=>personas.slice(0,count).filter(p=>p.end===key).length;
