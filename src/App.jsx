@@ -1,88 +1,17 @@
-import { useCallback, useEffect, useState } from "react";
-import { Menu } from "lucide-react";
-import Sidebar from "./components/layout/Sidebar";
-import { studies } from "./data/demoData";
-import IntegratedCreatePage from "./pages/IntegratedCreatePage";
-import GenericPage from "./pages/GenericPage";
-import HomePage from "./pages/HomePage";
-import ReportPage from "./pages/ReportPage";
-import StudiesPage from "./pages/StudiesPage";
-import RunPage from "./pages/RunPage";
-import { getSetupDraftMeta } from "./data/setupDraft";
+import { useEffect, useState } from 'react';
+import { ArrowLeft, ArrowRight, RotateCcw, X } from 'lucide-react';
+import { countAt, groups, personas, stageForProgress, stages, tests } from './concepts/data';
+import './concepts/flow.css';
 
-function initialStudies() {
-  try {
-    const saved = JSON.parse(localStorage.getItem("personalab-integrated-studies") || "[]");
-    return [...saved.filter(s => s?.integrated), ...studies];
-  } catch { return [...studies]; }
-}
-
-export default function App() {
-  const [page, setPage] = useState("home");
-  const [studyList, setStudyList] = useState(initialStudies);
-  const [studyId, setStudyId] = useState(studies[0].id);
-  const [focusPersonaId, setFocusPersonaId] = useState(null);
-  const [detailTab, setDetailTab] = useState("overview");
-  const [collapsed, setCollapsed] = useState(false);
-  const [mobile, setMobile] = useState(false);
-  const [draftMeta, setDraftMeta] = useState(getSetupDraftMeta);
-
-  const study = studyList.find(s => s.id === studyId) || studyList[0];
-  useEffect(() => {
-    try { localStorage.setItem("personalab-integrated-studies", JSON.stringify(studyList.filter(s => s.integrated))); }
-    catch { /* 파일 이미지가 브라우저 저장 용량을 넘으면 현재 세션에서 계속 사용 */ }
-  }, [studyList]);
-  const updateStudy = useCallback((id, changes) => setStudyList(list => list.map(s => s.id === id ? { ...s, ...changes } : s)), []);
-  const goReport = (selectedStudy) => {
-    setStudyId(selectedStudy.id);
-    setDetailTab("overview");
-    setPage("report");
-  };
-  const openResult = () => { setDetailTab("report"); setPage("report"); };
-  const goRun = (selectedStudy = study, personaId = null) => {
-    setStudyId(selectedStudy.id);
-    setFocusPersonaId(personaId);
-    setPage("run");
-  };
-  const finishCreate = (newStudy) => {
-    setStudyList(list => [newStudy, ...list]);
-    goRun(newStudy);
-  };
-
-  const changePage = (nextPage) => {
-    setPage(nextPage);
-    setMobile(false);
-  };
-
-  const views = {
-    home: <HomePage goReport={goReport} setPage={setPage} studyList={studyList} draftMeta={draftMeta} />,
-    studies: <StudiesPage goReport={goReport} setPage={setPage} studyList={studyList} draftMeta={draftMeta} />,
-    report: <ReportPage key={study.id} study={study} setPage={setPage} goRun={goRun} initialTab={detailTab} />,
-    create: <IntegratedCreatePage setPage={setPage} finish={finishCreate} onDraftMetaChange={setDraftMeta} />,
-    run: study?.integrated ? <RunPage key={study.id} study={study} onUpdate={updateStudy} setPage={setPage} openReport={openResult} focusPersonaId={focusPersonaId} /> : <GenericPage type="runs" studyList={studyList} goReport={goReport} />,
-  };
-
-  return (
-    <div
-      className={`shell ${collapsed ? "collapsed" : ""} ${mobile ? "mobile-open" : ""}`}
-    >
-      <Sidebar
-        page={page}
-        setPage={changePage}
-        collapsed={collapsed}
-        setCollapsed={setCollapsed}
-      />
-      <button
-        className="global-mobile icon-btn"
-        onClick={() => setMobile(true)}
-        aria-label="메뉴 열기"
-      >
-        <Menu size={20} />
-      </button>
-      <div className="overlay" onClick={() => setMobile(false)} />
-      <section className="main">
-        {views[page] ?? <GenericPage type={page} studyList={studyList} goReport={goReport} />}
-      </section>
-    </div>
-  );
-}
+function useRoute(){const [route,setRoute]=useState(location.pathname);useEffect(()=>{const change=()=>setRoute(location.pathname);addEventListener('popstate',change);return()=>removeEventListener('popstate',change)},[]);const go=path=>{history.pushState({},'',path);setRoute(path);window.scrollTo(0,0)};return[route,go]}
+function Mark(){return <span className="brand"><span className="brand-symbol">P<span>●</span></span> PersonaLab <small>AI 사용자 실험실</small></span>}
+function Prototype({current='signup'}){const title={signup:'회원가입',profile:'정보 입력',interests:'관심사 선택',complete:'가입 완료'}[current];return <div className="prototype"><div className="prototype-top"><span>프로토타입 화면</span><span>01 / 03</span></div><div className="prototype-device"><div className="mini-logo">m</div><h4>{title}</h4><p>{current==='interests'?'관심 있는 주제를 선택해주세요':current==='profile'?'기본 정보를 알려주세요':current==='complete'?'반가워요! 시작할 준비가 되었어요':'새로운 경험을 시작하세요'}</p>{current==='interests'?<div className="chips">{['문화','여행','음악','독서','운동','요리'].map(x=><span key={x}>{x}</span>)}</div>:current==='complete'?<div className="success-check">✓</div>:<div className="form-lines"><span/><span/><span/></div>}<div className="mini-button">{current==='complete'?'시작하기':'다음'}</div></div><p className="prototype-caption">{title} 화면에서 AI 사용자가 과제를 진행합니다.</p></div>}
+function PersonaPanel({persona,onClose}){if(!persona)return null;const stage=stages.find(s=>s.key===persona.end);return <aside className="persona-panel"><button className="close-btn" onClick={onClose} aria-label="상세 닫기"><X size={20}/></button><span className="eyebrow">개별 사용자 근거</span><h2>Persona #{persona.id}</h2><div className="group-label"><span style={{background:persona.color}}/> {persona.group}</div><div className="detail-block"><small>사용 전 의견</small><strong>“{persona.opinion}”</strong></div><div className="detail-block"><small>실제 행동</small><div className="path-list">{persona.path.join(' → ')}</div></div><div className="detail-block"><small>{stage?'이탈 이유':'완료 결과'}</small><strong>“{persona.reason}”</strong></div><div className="detail-block"><small>결과 근거 · 관찰 화면</small><Prototype current={persona.end}/></div><p className="demo-note">데모 시뮬레이션의 관찰 가능한 행동과 표현 이유입니다.</p></aside>}
+function Pinball({compact=false}){const [count,setCount]=useState(0),[playing,setPlaying]=useState(true),[selected,setSelected]=useState(null),[persona,setPersona]=useState(null);useEffect(()=>{if(!playing||count>=100)return;const timer=setTimeout(()=>setCount(v=>v+1),compact?42:52);return()=>clearTimeout(timer)},[count,playing,compact]);const current=stageForProgress(count),visible=personas.slice(Math.max(0,count-12),count),activeStage=selected||(count===100?'interests':current),matching=selected?personas.filter(p=>p.end===selected):[];const reset=()=>{setCount(0);setPlaying(true);setSelected(null);setPersona(null)};return <div className={`lab ${compact?'lab-compact':''}`}><div className="lab-header"><div><span className="eyebrow">실제 사용 행동 · 데모 시뮬레이션</span><h2>{count===100?'100명의 결과 지도':'AI 사용자가 테스트 중입니다'}</h2></div><div className="lab-controls"><span>{count} / 100명 투입</span><button onClick={reset}><RotateCcw size={15}/> 다시 보기</button>{count<100&&!compact&&<button onClick={()=>setPlaying(!playing)}>{playing?'일시정지':'계속'}</button>}{count<100&&!compact&&<button onClick={()=>{setCount(100);setPlaying(false)}}>결과 바로 보기</button>}</div></div><div className="lab-grid"><div className="board"><div className="board-head"><span>100명 시작</span><span>과제 완료 ↓</span></div><div className="launch"><span>AI 사용자 투입</span><div className="launch-track" style={{width:`${count}%`}}/></div><div className="pins">{Array.from({length:28},(_,i)=><i key={i} style={{left:`${8+i%7*14}%`,top:`${14+Math.floor(i/7)*19}%`}}/>)}</div><div className="balls">{visible.map((p,i)=><i key={p.id} style={{'--ball':p.color,left:`${15+(p.id*37+i*11)%70}%`,top:`${13+(p.id*23+i*7+count*3)%70}%`,animationDelay:`${i*-.11}s`}} title={`Persona #${p.id} · ${p.group}`}/>)}</div><div className="board-stages">{stages.map((stage,i)=><button key={stage.key} className={`stage-port ${activeStage===stage.key?'active':''}`} onClick={()=>setSelected(stage.key)}><span className="port-index">0{i+1}</span><strong>{stage.name}</strong><span>{countAt(stage.key,count)}명 이탈</span><span className="port-hole"/></button>)}<button className="stage-port completion" onClick={()=>setSelected('complete')}><span className="port-index">04</span><strong>과제 완료</strong><span>{countAt('complete',count)}명 완료</span><span className="port-hole"/></button></div></div><Prototype current={activeStage}/></div><div className="lab-foot"><div className="legend">{groups.map(g=><span key={g.name}><i style={{background:g.color}}/>{g.name} {g.count}명</span>)}</div>{count===100&&<strong>가장 큰 이탈: 관심사 선택 · 25명</strong>}</div>{selected&&<div className="issue"><button className="close-btn" onClick={()=>setSelected(null)} aria-label="문제 지점 닫기"><X size={18}/></button><span className="eyebrow">{selected==='complete'?'완료 지점':'이탈 지점'}</span><h3>{selected==='complete'?'과제 완료 · 46명':`${stages.find(s=>s.key===selected)?.name} · ${countAt(selected,100)}명 이탈`}</h3><p>{selected==='complete'?'주어진 회원가입 과제를 끝까지 마쳤습니다.':stages.find(s=>s.key===selected)?.reason}</p><div className="issue-groups">{groups.map(g=><span key={g.name}>{g.name} {matching.filter(p=>p.group===g.name).length}명</span>)}</div><p>사용 전 긍정 의견: {matching.filter(p=>p.positive).length}명</p><div className="persona-links">{matching.slice(0,compact?5:12).map(p=><button key={p.id} onClick={()=>setPersona(p)}>#{p.id} <ArrowRight size={13}/></button>)}</div></div>}<PersonaPanel persona={persona} onClose={()=>setPersona(null)}/></div>}
+function Header({go,route}){return <header className="site-header"><button className="mark-button" onClick={()=>go('/')}><Mark/></button><nav><button className={route==='/tests'?'active':''} onClick={()=>go('/tests')}>테스트</button><button onClick={()=>go('/create')}>새 테스트</button></nav></header>}
+function Home({go}){return <><section className="hero"><div className="hero-copy"><span className="eyebrow">PersonaLab · 새로운 제품 경험을 미리 관찰하세요</span><h1>AI 사용자들이<br/><em>직접 써보는</em> 실험실</h1><p>100명이 어디에서 멈추는지, 왜 멈췄는지 확인하세요.</p><button className="primary" onClick={()=>go('/create')}>+ 새 테스트 만들기 <ArrowRight size={18}/></button><span className="hero-hint">아래 데모가 자동으로 실행됩니다. 결과 지점을 눌러 살펴보세요.</span></div><div className="hero-demo"><Pinball compact/></div></section><section className="home-bottom"><span>말한 것과 실제 행동은 다를 수 있습니다.</span><strong>“사용하고 싶어요” 72명 <span>→</span> 실제 과제 완료 46명</strong><button onClick={()=>go('/tests')}>테스트 목록 보기 <ArrowRight size={17}/></button></section></>}
+function Tests({go}){return <main className="content"><div className="page-heading"><div><span className="eyebrow">모든 테스트</span><h1>무엇을 살펴볼까요?</h1><p>테스트별 진행 상태와 핵심 결과를 확인하세요.</p></div><button className="primary" onClick={()=>go('/create')}>+ 새 테스트 만들기</button></div><div className="test-list">{tests.map((test,i)=><button key={test.name} className="test-row" onClick={()=>go('/tests/signup')}><span className="test-num">0{i+1}</span><span className="test-info"><strong>{test.name}</strong><small>{test.detail}</small></span><span className="test-secondary">{test.secondary}</span><span className="status">{test.status}</span><ArrowRight size={20}/></button>)}</div><p className="demo-note">대표 테스트 외 항목은 서비스 구성 예시입니다. 선택하면 대표 데모로 이동합니다.</p></main>}
+function Create({go}){const [step,setStep]=useState(0),[product,setProduct]=useState('모아'),[task,setTask]=useState('회원가입을 완료해 주세요');const labels=['제품','프로토타입','AI 사용자','테스트 준비'];return <main className="content create"><div className="page-heading"><div><span className="eyebrow">새 테스트 만들기</span><h1>{labels[step]}</h1><p>제품과 화면, AI 사용자를 차례대로 준비합니다.</p></div></div><div className="steps">{labels.map((label,i)=><span key={label} className={i===step?'current':''}>{i+1}. {label}</span>)}</div><div className="create-card">{step===0?<><h2>어떤 제품을 테스트하나요?</h2><label>제품 이름<input value={product} onChange={e=>setProduct(e.target.value)}/></label><label>사용 과제<input value={task} onChange={e=>setTask(e.target.value)}/></label><p>입력한 내용은 이번 브라우저의 데모 화면에만 사용됩니다.</p></>:step===1?<><h2>어떤 화면을 지나가나요?</h2><p>데모 프로토타입의 회원가입 흐름이 연결되어 있습니다.</p><div className="screen-sequence">{stages.map((s,i)=><div key={s.key}><span>0{i+1}</span><strong>{s.name}</strong><small>프로토타입 화면 연결됨</small></div>)}</div></>:step===2?<><h2>100명의 AI 사용자를 준비합니다</h2><p>서로 다른 세 그룹이 같은 과제를 수행합니다.</p><div className="group-cards">{groups.map(g=><div key={g.name}><i style={{background:g.color}}/><strong>{g.name}</strong><b>{g.count}명</b></div>)}</div></>:<><h2>테스트 준비 완료</h2><p><strong>{product||'제품'}</strong>의 “{task}” 과제를 100명의 AI 사용자가 수행할 준비가 되었습니다.</p><div className="ready-balls">{personas.map(p=><i key={p.id} style={{background:p.color}}/>)}</div><div className="ready-summary">제품 · {product}　/　프로토타입 · 3개 화면　/　AI 사용자 · 100명</div><p className="demo-note">시작하면 고정된 데모 시뮬레이션이 재생됩니다.</p></>}</div><div className="create-actions">{step>0&&<button className="secondary" onClick={()=>setStep(step-1)}><ArrowLeft size={16}/> 이전</button>}<button className="primary" onClick={()=>step===3?go('/tests/signup/run'):setStep(step+1)}>{step===3?'테스트 시작':'다음 단계'} <ArrowRight size={16}/></button></div></main>}
+function Detail({go}){return <main className="content"><button className="back-link" onClick={()=>go('/tests')}><ArrowLeft size={16}/> 테스트 목록</button><div className="page-heading"><div><span className="eyebrow">완료된 테스트 · 데모 시뮬레이션</span><h1>신규 회원가입 경험</h1><p>100명의 AI 사용자가 회원가입 과제를 수행했습니다.</p></div><button className="primary" onClick={()=>go('/tests/signup/results')}>결과 보기 <ArrowRight size={17}/></button></div><div className="detail-hero"><div><small>100명 시작</small><strong>46명 완료</strong></div><div><small>가장 큰 이탈</small><strong>관심사 선택 · 25명</strong></div><div><small>사용 전 긍정 의견</small><strong>72명</strong></div></div><div className="work-card"><h2>다음에 할 일</h2><p>가장 많이 멈춘 관심사 선택 화면에서 사용자별 이유를 확인하세요.</p><button onClick={()=>go('/tests/signup/results')}>결과 지도 열기 <ArrowRight size={17}/></button></div></main>}
+function Results({go,run=false}){return <main className="content results"><button className="back-link" onClick={()=>go('/tests/signup')}><ArrowLeft size={16}/> 테스트 개요</button><div className="page-heading"><div><span className="eyebrow">신규 회원가입 경험 · 데모 시뮬레이션</span><h1>{run?'테스트 실행':'100명이 어디까지 갔을까요?'}</h1><p>핀볼판의 각 단계는 실제 프로토타입 화면과 연결됩니다.</p></div>{run&&<button className="secondary" onClick={()=>go('/tests/signup/results')}>결과 보기 <ArrowRight size={16}/></button>}</div><div className="metric-strip"><div><small>시작</small><strong>100명</strong></div><div><small>과제 완료</small><strong>46명</strong></div><div><small>가장 큰 이탈</small><strong>관심사 선택 · 25명</strong></div></div><Pinball key={run?'run':'results'}/><div className="comparison"><div><span className="eyebrow">말한 것과 실제 행동</span><h2>“사용해보고 싶어요” 72명</h2><p>실제 회원가입 과제를 끝까지 마친 사람은 46명입니다. 이 숫자는 각각 사용 전 의견과 행동 결과입니다.</p></div><div className="comparison-bars"><div><span>사용 전 긍정 의견</span><i style={{width:'72%'}}/>72명</div><div><span>과제 완료</span><i style={{width:'46%'}}/>46명</div></div></div></main>}
+export default function App(){const [route,go]=useRoute();return <div className="flow-app"><Header go={go} route={route}/>{route==='/create'?<Create go={go}/>:route==='/tests'?<Tests go={go}/>:route==='/tests/signup'?<Detail go={go}/>:route==='/tests/signup/run'?<Results go={go} run/>:route==='/tests/signup/results'?<Results go={go}/>:<Home go={go}/>}<footer><Mark/><span>이 화면의 인원과 행동은 UX 비교를 위한 데모 시뮬레이션입니다.</span></footer></div>}
