@@ -1,0 +1,268 @@
+/* D · Cosmos inspired. White editorial canvas, black controls, useful motion. */
+:root {
+  --bg: #fff;
+  --surface: #fff;
+  --surface-raised: #fff;
+  --surface-soft: #f7f7f5;
+  --text: #151515;
+  --text-secondary: #444;
+  --muted: #777;
+  --line: #e9e9e6;
+  --line-strong: #d6d6d2;
+  --primary: #171717;
+  --primary-hover: #353535;
+  --primary-soft: #f1f1ef;
+  --accent: #171717;
+  --accent-soft: #f2f2f0;
+  --success: #285e48;
+  --success-soft: #eaf4ed;
+  --warning: #946235;
+  --warning-soft: #f7f0e8;
+  --danger: #a3444b;
+  --danger-soft: #f9eeee;
+  --orange: #171717;
+  --orange-soft: #f1f1ef;
+  --purple: #171717;
+  --purple-soft: #f1f1ef;
+  --green: #285e48;
+  --green-soft: #eaf4ed;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --shadow: 0 16px 44px rgb(0 0 0 / 4%);
+  font-family: 'DM Sans', 'Noto Sans KR', Arial, sans-serif;
+}
+html { scroll-behavior: smooth; }
+body { background: #fff; color: var(--text); }
+.cosmos-shell { min-height: 100vh; overflow: clip; background: #fff; }
+.cosmos-main { min-height: calc(100vh - 150px); }
+.cosmos-nav { height: 76px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 24px; padding: 0 clamp(22px, 4.4vw, 76px); position: relative; z-index: 25; background: #fff; border-bottom: 1px solid #f2f2f0; }
+.cosmos-nav button { border: 0; background: transparent; color: var(--text); }
+.cosmos-wordmark { justify-self: start; display: inline-flex; align-items: center; padding: 0; font-size: 23px; font-weight: 800; letter-spacing: -.085em; line-height: 1; }
+.cosmos-wordmark span { font-weight: 400; }
+.cosmos-wordmark i { font-style: normal; font-size: 13px; margin-left: 4px; align-self: flex-start; letter-spacing: 0; }
+.cosmos-nav nav { display: flex; align-items: center; gap: 32px; }
+.cosmos-nav nav button { padding: 10px 2px; font-size: 12px; font-weight: 600; color: #777; border-bottom: 1px solid transparent; }
+.cosmos-nav nav button.active, .cosmos-nav nav button:hover { color: #161616; border-color: #161616; }
+.cosmos-nav .cosmos-nav-cta { justify-self: end; display: inline-flex; align-items: center; gap: 7px; border: 1px solid #1a1a1a; border-radius: 100px; padding: 11px 17px; background: #171717; color: #fff; font-size: 12px; font-weight: 700; transition: transform .18s ease, background .18s ease; }
+.cosmos-nav .cosmos-nav-cta:hover, .cosmos-main-cta:hover { background: #373737; transform: translateY(-2px); }
+.cosmos-footer { display: flex; justify-content: space-between; align-items: center; gap: 20px; border-top: 1px solid #e8e8e5; padding: 27px clamp(22px, 4.4vw, 76px); color: #777; font-size: 11px; }
+
+/* Floating test library. Each tile opens the study represented by its thumbnail. */
+.cosmos-hero { position: relative; min-height: min(770px, calc(100vh - 76px)); isolation: isolate; overflow: hidden; --pointer-x: 0; --pointer-y: 0; --page-scroll: 0; }
+.cosmos-hero-center { position: absolute; top: 45%; left: 50%; z-index: 3; transform: translate(-50%, -50%); width: min(660px, 62%); text-align: center; pointer-events: none; }
+.cosmos-hero-center button { pointer-events: auto; }
+.cosmos-kicker, .cosmos-section-label { display: block; font-size: 10px; letter-spacing: .15em; font-weight: 800; color: #5b5b5b; }
+.cosmos-hero h1 { margin: 22px 0 18px; color: #101010; font-size: clamp(64px, 7.3vw, 112px); line-height: .98; font-weight: 700; letter-spacing: -.085em; text-wrap: balance; }
+.cosmos-hero-center p { color: #595959; line-height: 1.8; font-size: clamp(13px, 1.05vw, 16px); margin: 0 auto 27px; word-break: keep-all; }
+.cosmos-main-cta { display: inline-flex; align-items: center; justify-content: center; gap: 15px; min-height: 49px; padding: 0 22px; border: 0; border-radius: 999px; background: #161616; color: #fff; font-weight: 700; font-size: 13px; transition: transform .2s ease, background .2s ease; }
+.cosmos-hero-caption { display: block; margin-top: 18px; font-size: 10px; color: #8a8a8a; letter-spacing: .025em; }
+.cosmos-float-layer { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.cosmos-float-wrap { position: absolute; width: var(--tile-w, 175px); pointer-events: auto; transform: rotate(var(--tilt, 0deg)); transition: transform .32s cubic-bezier(.2,.7,.2,1); }
+.cosmos-float-wrap.pos-one { left: 5.5%; top: 8%; --tile-w: 166px; --tilt: -13deg; --depth: -25; --scroll-depth: -.05; }
+.cosmos-float-wrap.pos-two { left: 19%; top: 15%; --tile-w: 118px; --tilt: 11deg; --depth: 16; --scroll-depth: .08; }
+.cosmos-float-wrap.pos-three { right: 6%; top: 8%; --tile-w: 177px; --tilt: 12deg; --depth: 25; --scroll-depth: -.045; }
+.cosmos-float-wrap.pos-four { right: 18%; top: 22%; --tile-w: 118px; --tilt: -10deg; --depth: -15; --scroll-depth: .09; }
+.cosmos-float-wrap.pos-five { left: 9%; bottom: 11%; --tile-w: 180px; --tilt: 11deg; --depth: 21; --scroll-depth: .04; }
+.cosmos-float-wrap.pos-six { right: 9%; bottom: 10%; --tile-w: 178px; --tilt: -12deg; --depth: -23; --scroll-depth: .035; }
+.cosmos-floating-card { display: block; width: 100%; padding: 7px; text-align: left; border: 1px solid #e2e2de; border-radius: 17px; background: #fff; color: #151515; box-shadow: 0 22px 55px rgb(0 0 0 / 13%), 0 2px 7px rgb(0 0 0 / 5%); animation: cosmos-arrive .65s ease-out both; transition: box-shadow .22s ease, scale .22s ease; }
+.cosmos-float-wrap:nth-child(even) .cosmos-floating-card { animation-delay: .12s; }
+.cosmos-floating-card:hover, .cosmos-floating-card:focus-visible { scale: 1.08; box-shadow: 0 28px 65px rgb(0 0 0 / 19%); }
+.cosmos-card-art { width: 100%; aspect-ratio: 1.13; border-radius: 11px; overflow: hidden; padding: 11px; background: #e7e9e5; }
+.cosmos-card-art img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: top; }
+.cosmos-card-art.calendar { background: #d9e4dc; }
+.cosmos-card-art.planner { background: #e8d7cf; }
+.cosmos-card-art.market { background: #d5dce2; }
+.cosmos-art-screen { display: flex; flex-direction: column; width: 100%; height: 100%; border: 1px solid rgb(0 0 0 / 8%); border-radius: 9px; padding: 11px; background: #fff; box-shadow: 0 5px 16px rgb(0 0 0 / 8%); }
+.cosmos-art-top { display: flex; align-items: center; gap: 5px; min-width: 0; }
+.cosmos-art-top b { width: 22px; height: 22px; flex: none; display: grid; place-items: center; border-radius: 6px; background: #2c5e4b; color: #fff; font-size: 10px; }
+.planner .cosmos-art-top b { background: #aa583c; }
+.market .cosmos-art-top b { background: #345875; }
+.cosmos-art-top span { font-size: 8px; font-weight: 800; letter-spacing: -.02em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cosmos-art-top i { margin-left: auto; color: #999; font-size: 7px; font-style: normal; }
+.cosmos-art-copy { margin: auto 0; display: flex; flex-direction: column; gap: 5px; }
+.cosmos-art-copy small { color: #777; font-size: 7px; }
+.cosmos-art-copy strong { font-size: clamp(10px, .9vw, 14px); letter-spacing: -.04em; }
+.cosmos-art-copy em { color: #777; font-size: 6px; font-style: normal; }
+.cosmos-art-bottom { display: flex; gap: 4px; }
+.cosmos-art-bottom span { width: 25%; height: 4px; border-radius: 10px; background: #e6e7e3; }
+.cosmos-art-bottom span:first-child { width: 40%; background: #a9baa9; }
+.cosmos-card-meta { display: flex; align-items: center; justify-content: space-between; gap: 3px; padding: 8px 2px 1px; }
+.cosmos-card-meta b { max-width: 60%; font-size: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cosmos-card-meta small { display: inline-flex; align-items: center; white-space: nowrap; gap: 2px; font-size: 7px; color: #555; }
+.cosmos-hero-bottom { position: absolute; z-index: 3; left: clamp(22px, 4.4vw, 76px); right: clamp(22px, 4.4vw, 76px); bottom: 26px; display: flex; justify-content: space-between; gap: 20px; color: #6b6b6b; font-size: 9px; font-weight: 700; letter-spacing: .12em; }
+.cosmos-hero-bottom span:first-child { display: flex; gap: 9px; align-items: center; }
+@keyframes cosmos-arrive { from { opacity: 0; translate: 0 14px; } to { opacity: 1; translate: 0 0; } }
+
+.cosmos-resume { max-width: 1320px; margin: 0 auto 30px; padding: 22px 28px; border-top: 1px solid #d9d9d5; border-bottom: 1px solid #d9d9d5; display: flex; gap: 18px; align-items: center; }
+.cosmos-resume span { font-size: 11px; color: #666; }
+.cosmos-resume strong { font-size: 14px; }
+.cosmos-resume button { margin-left: auto; display: inline-flex; gap: 7px; align-items: center; background: transparent; border: 0; font-weight: 700; font-size: 12px; }
+.cosmos-intro { min-height: 500px; max-width: 1320px; margin: 0 auto; padding: 112px 20px 110px; display: grid; grid-template-columns: .8fr 2fr .8fr; gap: 45px; border-top: 1px solid #e8e8e6; }
+.cosmos-intro h2 { margin: -15px 0 27px; font-size: clamp(48px, 5.1vw, 78px); letter-spacing: -.075em; line-height: 1.08; font-weight: 600; text-wrap: balance; }
+.cosmos-intro p { max-width: 500px; margin: 0; color: #666; font-size: 15px; line-height: 1.8; word-break: keep-all; }
+.cosmos-intro-aside { align-self: end; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid #1b1b1b; padding-top: 18px; }
+.cosmos-intro-aside span { font-size: 13px; font-weight: 700; }
+.cosmos-intro-aside small { color: #777; font-size: 11px; line-height: 1.5; }
+.cosmos-collection { padding: 95px clamp(22px, 4.4vw, 76px) 130px; background: #f7f7f5; }
+.cosmos-collection-head { max-width: 1320px; margin: 0 auto 33px; display: flex; justify-content: space-between; align-items: end; }
+.cosmos-collection h2 { margin: 12px 0 0; font-size: clamp(38px, 4.5vw, 66px); letter-spacing: -.065em; font-weight: 600; }
+.cosmos-collection-head button { display: inline-flex; align-items: center; gap: 9px; padding: 8px 0; border: 0; border-bottom: 1px solid #171717; background: transparent; font-size: 12px; font-weight: 700; }
+.cosmos-collection-grid { max-width: 1320px; margin: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.cosmos-collection-item { display: flex; flex-direction: column; padding: 12px; border: 1px solid #e4e4e0; border-radius: 16px; text-align: left; color: #151515; background: #fff; transition: transform .2s ease, box-shadow .2s ease; }
+.cosmos-collection-item:hover { transform: translateY(-6px); box-shadow: 0 24px 50px rgb(0 0 0 / 8%); }
+.cosmos-collection-item .cosmos-card-art { aspect-ratio: 1.56; padding: 22px; }
+.cosmos-collection-item .cosmos-art-screen { padding: 19px; }
+.cosmos-collection-item .cosmos-art-top b { width: 33px; height: 33px; font-size: 15px; }
+.cosmos-collection-item .cosmos-art-top span { font-size: 11px; }
+.cosmos-collection-item .cosmos-art-copy small { font-size: 10px; }
+.cosmos-collection-item .cosmos-art-copy strong { font-size: 22px; }
+.cosmos-collection-item .cosmos-art-copy em { font-size: 9px; }
+.cosmos-collection-copy { display: flex; flex-direction: column; padding: 24px 9px 11px; }
+.cosmos-collection-copy small { color: #777; font-size: 10px; letter-spacing: .08em; }
+.cosmos-collection-copy b { font-size: 24px; margin: 10px 0 5px; letter-spacing: -.05em; }
+.cosmos-collection-copy em { color: #777; font-size: 12px; font-style: normal; }
+.cosmos-collection-copy > span { display: inline-flex; align-items: center; gap: 8px; margin-top: 27px; font-size: 11px; font-weight: 700; }
+.cosmos-end { min-height: 440px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 85px 20px; }
+.cosmos-end > span { font-size: 10px; color: #777; letter-spacing: .15em; font-weight: 700; }
+.cosmos-end h2 { margin: 22px 0 25px; font-size: clamp(47px, 5vw, 74px); font-weight: 600; letter-spacing: -.075em; line-height: 1.08; }
+.cosmos-end button { display: inline-flex; align-items: center; gap: 11px; border: 0; border-radius: 99px; padding: 15px 22px; background: #171717; color: #fff; font-size: 12px; font-weight: 700; }
+.cosmos-sample-run { max-width: 1020px; margin: 0 auto; padding: 56px 30px 130px; }
+.cosmos-sample-run .cosmos-section-label { margin-top: 50px; }
+.cosmos-sample-run h1 { font-size: clamp(44px, 5vw, 70px); letter-spacing: -.07em; margin: 12px 0 5px; }
+.cosmos-sample-run > p { color: #666; }
+.cosmos-sample-run-card { display: flex; align-items: flex-start; gap: 35px; margin: 55px 0 25px; padding: 70px; background: #f6f6f3; border-radius: 18px; }
+.cosmos-sample-run-card small { color: #777; font-size: 11px; }
+.cosmos-sample-run-card h2 { font-size: 31px; letter-spacing: -.06em; }
+.cosmos-sample-run-card p { max-width: 520px; color: #666; line-height: 1.7; }
+
+/* The complete product workflow shares the same restrained editorial language. */
+.cosmos-shell .topbar { position: static; min-height: 0; padding: 65px clamp(22px, 4.4vw, 76px) 25px; border: 0; background: #fff; }
+.cosmos-shell .topbar h1 { font-size: clamp(36px, 3.6vw, 56px); font-weight: 650; line-height: 1.13; letter-spacing: -.065em; }
+.cosmos-shell .topbar p { margin-top: 10px; font-size: 13px; color: #777; }
+.cosmos-shell .topbar-eyebrow { color: #777; letter-spacing: .15em; font-size: 10px; }
+.cosmos-shell .topbar-context { border: 0; padding: 0; color: #999; }
+.cosmos-shell .context-dot { background: #222; }
+.cosmos-shell .page, .cosmos-shell .integrated-page { max-width: 1480px; padding: 30px clamp(22px, 4.4vw, 76px) 110px; }
+.cosmos-shell .flow-card, .cosmos-shell .study-table, .cosmos-shell .study-list, .cosmos-shell .form-card, .cosmos-shell .run-summary > div, .cosmos-shell .run-progress { border: 1px solid var(--line); background: #fff; box-shadow: none; border-radius: 13px; }
+.cosmos-shell .flow-card { padding: 28px; }
+.cosmos-shell .flow-card h3 { font-size: 17px; letter-spacing: -.035em; }
+.cosmos-shell .primary { background: #171717; border-color: #171717; color: #fff; border-radius: 999px; font-size: 12px; }
+.cosmos-shell .primary:hover { background: #383838; border-color: #383838; box-shadow: none; }
+.cosmos-shell .secondary { background: #fff; border-color: #d9d9d6; border-radius: 999px; color: #222; }
+.cosmos-shell .secondary:hover { background: #f5f5f3; border-color: #777; }
+.cosmos-shell .text-button, .cosmos-shell .back, .cosmos-shell .section-head button { color: #171717; }
+.cosmos-shell .demo-mark { background: #efefed; color: #555; border-radius: 99px; }
+.cosmos-shell .demo-note { background: #f7f7f5; color: #666 !important; border-radius: 8px; }
+.cosmos-shell .flow-steps li { border-color: #e5e5e2; background: #fff; border-radius: 10px; }
+.cosmos-shell .flow-steps li.active { border-color: #171717; background: #f7f7f5; }
+.cosmos-shell .flow-steps li.active span, .cosmos-shell .flow-steps li.done span { background: #171717; color: #fff; }
+.cosmos-shell .flow-heading p, .cosmos-shell .section-kicker, .cosmos-shell .flow-card-head > span { color: #666; }
+.cosmos-shell .flow-heading h2 { font-size: clamp(30px, 3vw, 43px); }
+.cosmos-shell .segmented button.on { background: #171717; border-color: #171717; color: #fff; }
+.cosmos-shell .trait-list span, .cosmos-shell .link-list span { background: #f0f0ee; color: #3f3f3f; }
+.cosmos-shell .flow-card input, .cosmos-shell .flow-card textarea, .cosmos-shell .flow-card select, .cosmos-shell .integrated-page input, .cosmos-shell .integrated-page textarea, .cosmos-shell .integrated-page select { border-color: #dededb; }
+.cosmos-shell .product-preview, .cosmos-shell .figma-row { background: #f7f7f5; border-color: #e6e6e3; }
+.cosmos-shell .flow-card-head p, .cosmos-shell .subtle { color: #777; }
+.cosmos-shell .study-title { border-bottom-color: #e8e8e5; }
+.cosmos-shell .tabs { border-bottom-color: #e8e8e5; }
+.cosmos-shell .tabs button.active { color: #171717; border-color: #171717; }
+.cosmos-shell .table-head { background: #f8f8f6; }
+.cosmos-shell .table-row:hover { background: #f8f8f6; }
+.cosmos-shell .test-filters button.active { background: #171717; border-color: #171717; color: #fff; }
+.cosmos-shell .pill.purple, .cosmos-shell .study-icon.running { color: #222; background: #f1f1ef; border-color: #e5e5e2; }
+.cosmos-shell .run-progress progress { accent-color: #171717; }
+.cosmos-shell .run-persona-list button.selected { border-color: #171717; background: #f8f8f6; }
+.cosmos-shell .persona-report-row:hover, .cosmos-shell .analytics-bars button:hover { background: #f8f8f6; }
+.cosmos-shell .saydo-card { background: #171717; color: #fff; }
+.cosmos-shell .saydo-card p, .cosmos-shell .saydo-card small { color: #bcbcbc; }
+.cosmos-shell .saydo-card { border-color: #171717; box-shadow: none; }
+.cosmos-shell .saydo-values span, .cosmos-shell .saydo-values span:nth-child(3) { background: #282828; border: 1px solid #444; }
+.cosmos-shell .saydo-values span:nth-child(2) { border-color: #888; }
+.cosmos-shell .saydo-values span:nth-child(2) b { color: #fff; }
+.cosmos-shell .saydo-values b { color: #fff; }
+.cosmos-shell .saydo-values em { color: #aaa; }
+.cosmos-shell .persona-card { box-shadow: none; }
+.cosmos-shell .persona-card:hover { border-color: #777; box-shadow: 0 13px 28px rgb(0 0 0 / 6%); }
+.cosmos-shell .persona-head { background: #f7f7f5; }
+.cosmos-shell .persona-head > span, .cosmos-shell .mini-avatar { color: #171717; background: #e9e9e6; }
+.cosmos-shell .persona-card .trait-list span { color: #454545; background: #f0f0ee; }
+.cosmos-shell .flow-footer { position: static; margin: 30px 0 0; padding: 18px 0 0; border-top: 1px solid #e9e9e6; background: #fff; backdrop-filter: none; }
+.cosmos-shell .phone-frame { border-color: #272727; box-shadow: 0 20px 36px rgb(0 0 0 / 12%); }
+.cosmos-shell .run-persona-list > button:hover { background: #f5f5f2; }
+.cosmos-shell .run-persona-list > button.selected { border-color: #999; background: #f3f3f0; box-shadow: inset 3px 0 0 #171717; }
+.cosmos-shell .detail-lead { background: #f7f7f5; border-color: #e5e5e2; }
+.cosmos-shell .detail-lead h3 { color: #171717; }
+.cosmos-shell .detail-lead p { color: #666; }
+.cosmos-shell .small-stats span { background: #f7f7f5; border-color: #ecece9; }
+.cosmos-shell .analytics-bars i { background: #eeeeeb; }
+.cosmos-shell .persona-report-head, .cosmos-shell .report-caveat { background: #f7f7f5; }
+.cosmos-shell .evidence-panel { border-radius: 0; background: #fff; box-shadow: -18px 0 40px rgb(0 0 0 / 14%); }
+.cosmos-shell .evidence-overlay { background: rgb(0 0 0 / 53%); }
+.cosmos-shell .evidence-panel header { background: #171717; border-color: #444; }
+.cosmos-shell .evidence-panel header small { color: #aaa; }
+.cosmos-shell .evidence-panel header .icon-btn { color: #fff; border-color: #555; background: #333; }
+:focus-visible { outline: 2px solid #171717; outline-offset: 3px; }
+
+@media (max-width: 1100px) {
+  .cosmos-hero { min-height: 720px; }
+  .cosmos-hero-center { width: min(600px, 65%); }
+  .cosmos-float-wrap.pos-two, .cosmos-float-wrap.pos-four { display: none; }
+  .cosmos-float-wrap.pos-one { left: 2%; top: 9%; }
+  .cosmos-float-wrap.pos-three { right: 2%; top: 9%; }
+  .cosmos-float-wrap.pos-five { left: 3%; bottom: 11%; }
+  .cosmos-float-wrap.pos-six { right: 3%; bottom: 11%; }
+  .cosmos-intro { grid-template-columns: 1fr 2fr; padding-inline: 35px; }
+  .cosmos-intro-aside { grid-column: 2; max-width: 270px; }
+}
+@media (max-width: 700px) {
+  .cosmos-nav { height: 66px; grid-template-columns: 1fr auto; gap: 10px; padding: 0 18px; }
+  .cosmos-wordmark { font-size: 20px; }
+  .cosmos-nav nav { display: none; }
+  .cosmos-nav .cosmos-nav-cta { padding: 9px 11px; font-size: 10px; }
+  .cosmos-nav .cosmos-nav-cta svg:last-child { display: none; }
+  .cosmos-hero { min-height: 900px; display: flex; flex-direction: column; overflow: hidden; }
+  .cosmos-hero-center { position: relative; top: auto; left: auto; transform: none; width: 100%; padding: 102px 24px 0; }
+  .cosmos-hero h1 { font-size: clamp(59px, 15vw, 83px); margin: 19px 0 18px; }
+  .cosmos-hero-center p { font-size: 12px; line-height: 1.7; }
+  .cosmos-hero-center p br { display: none; }
+  .cosmos-float-layer { position: relative; inset: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 15px; padding: 70px 28px 95px; }
+  .cosmos-float-wrap { position: relative; left: auto !important; right: auto !important; top: auto !important; bottom: auto !important; display: block !important; width: 100%; transform: rotate(var(--tilt, 0deg)) !important; }
+  .cosmos-float-wrap.pos-two, .cosmos-float-wrap.pos-four, .cosmos-float-wrap.pos-six { display: none !important; }
+  .cosmos-float-wrap.pos-five { grid-column: 1 / -1; width: calc(50% - 7px); justify-self: center; }
+  .cosmos-floating-card { animation-duration: .65s; }
+  .cosmos-card-art { aspect-ratio: 1.35; }
+  .cosmos-hero-bottom { left: 20px; right: 20px; bottom: 17px; font-size: 8px; }
+  .cosmos-intro { min-height: 0; display: block; padding: 85px 25px; }
+  .cosmos-intro h2 { font-size: 50px; margin: 30px 0 20px; }
+  .cosmos-intro-aside { margin-top: 50px; }
+  .cosmos-collection { padding: 80px 20px 90px; }
+  .cosmos-collection-head { align-items: flex-start; }
+  .cosmos-collection h2 { font-size: 43px; }
+  .cosmos-collection-grid { grid-template-columns: 1fr; }
+  .cosmos-collection-item .cosmos-card-art { aspect-ratio: 1.7; }
+  .cosmos-end { min-height: 350px; }
+  .cosmos-footer { flex-wrap: wrap; padding: 25px 20px; font-size: 9px; }
+  .cosmos-resume { margin: 0 20px 28px; flex-wrap: wrap; padding-inline: 0; }
+  .cosmos-resume button { margin-left: 0; }
+  .cosmos-shell .topbar { padding: 42px 20px 13px; }
+  .cosmos-shell .topbar-context { display: none; }
+  .cosmos-shell .page, .cosmos-shell .integrated-page { padding: 20px 20px 75px; }
+  .cosmos-shell .flow-card { padding: 19px; }
+  .cosmos-shell .flow-top { flex-wrap: wrap; }
+  .cosmos-shell .setup-save-actions { flex-wrap: wrap; justify-content: flex-start; }
+  .cosmos-shell .flow-steps { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+  .cosmos-shell .flow-steps li { justify-content: flex-start; gap: 7px; padding: 8px; }
+  .cosmos-shell .flow-steps li b { display: block; font-size: 10px; }
+  .cosmos-shell .run-columns { display: block; }
+  .cosmos-shell .run-columns > * { margin-bottom: 15px; }
+  .cosmos-shell .run-summary { grid-template-columns: 1fr; }
+  .cosmos-shell .setup-grid, .cosmos-shell .panel-options { grid-template-columns: 1fr; }
+  .cosmos-sample-run { padding: 30px 20px 80px; }
+  .cosmos-sample-run-card { padding: 35px 24px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cosmos-floating-card { animation: none; }
+  .cosmos-float-wrap { transition: none; transform: rotate(var(--tilt,0deg)); }
+  .cosmos-collection-item, .cosmos-main-cta { transition: none; }
+}

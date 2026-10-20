@@ -32,8 +32,8 @@ function IntegratedStudyDetail({ study, setPage, goRun, initialTab }) {
   </>;
 }
 
-function LegacyTestDetail({ study, setPage }) {
-  const [tab, setTab] = useState("overview");
+function LegacyTestDetail({ study, setPage, initialTab }) {
+  const [tab, setTab] = useState(initialTab);
   const [drawer, setDrawer] = useState("");
   const [showExample, setShowExample] = useState(false);
   return <>
@@ -51,5 +51,5 @@ function LegacyTestDetail({ study, setPage }) {
 }
 
 export default function ReportPage({ study, setPage, goRun, initialTab = "overview" }) {
-  return study.integrated ? <IntegratedStudyDetail study={study} setPage={setPage} goRun={goRun} initialTab={initialTab} /> : <LegacyTestDetail study={study} setPage={setPage} />;
+  return study.integrated ? <IntegratedStudyDetail study={study} setPage={setPage} goRun={goRun} initialTab={initialTab} /> : <LegacyTestDetail study={study} setPage={setPage} initialTab={initialTab} />;
 }
