@@ -17,7 +17,7 @@ function IntegratedStudyDetail({ study, setPage, goRun, initialTab }) {
   const primaryAction = () => complete ? setTab("report") : goRun(study);
   return <>
     <Header title={study.name} subtitle="설정, AI 실행, 결과와 근거를 한곳에서 확인하세요." />
-    <main className="page report integrated-detail">
+    <main className={`page report integrated-detail${tab === "report" ? " studio-report-page" : ""}`}>
       <button className="back" onClick={() => setPage("studies")}><ArrowLeft size={15} /> 모든 테스트</button>
       <div className="study-title"><div><span className={`study-icon ${complete ? "complete" : "running"}`}><FlaskConical size={20} /></span><section><div><h2>{study.name}</h2><Pill tone={complete ? "green" : "purple"} dot>{status}</Pill></div><p>{study.desc} · {study.version} · AI Persona {study.personas.length}명 · {study.updated} 업데이트</p></section></div><button className="primary" onClick={primaryAction}>{complete ? <ArrowRight size={15} /> : <Play size={15} />} {cta}</button></div>
       <div className="tabs" role="tablist" aria-label="테스트 상세">{[["overview", "개요"], ["setup", "테스트 설정"], ["run", "실행 기록"], ["report", "결과 리포트"]].map(([key, label]) => <button key={key} role="tab" aria-selected={tab === key} className={tab === key ? "active" : ""} onClick={() => setTab(key)}>{label}</button>)}</div>
