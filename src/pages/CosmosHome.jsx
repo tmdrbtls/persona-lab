@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { ArrowDown, ArrowRight, ArrowUpRight, MousePointer2 } from 'lucide-react';
 import { buildRun, createDraft, DROP_LABELS, generatePersonas, OCCUPATIONS, reportFor } from '../data/studyEngine';
-import prototypeCapture from '../assets/home/schedule-prototype.png';
-import askCapture from '../assets/home/schedule-ask.png';
-import actCapture from '../assets/home/schedule-act.png';
-import reportCapture from '../assets/home/schedule-report.png';
+import prototypeCapture from '../assets/home/stitch-case-0.jpg';
+import askCapture from '../assets/home/stitch-case-1.jpg';
+import actCapture from '../assets/home/stitch-case-2.jpg';
+import reportCapture from '../assets/home/stitch-case-3.jpg';
 import '../cosmos-home-desktop.css';
 
 // The desktop landing uses the same deterministic sample engine as the create/run flow.
@@ -15,10 +15,10 @@ const landingResults = buildRun(landingDemo).results;
 const firstEvidence = Math.max(0, landingResults.findIndex(result => result.act.end.result === 'drop'));
 const landingSummary = reportFor({ ...landingDemo, run: { results: landingResults } });
 const caseCards = [
-  { image: prototypeCapture, label: '프로토타입', title: '일정메이트 회원가입 화면', detail: '입력 항목과 연결된 선택지', target: 'home-evidence', action: '화면과 근거 보기' },
-  { image: askCapture, label: 'Ask 응답', title: '사용하기 전에는 어떤 생각일까.', detail: '같은 Persona의 사용 의향과 우려', target: 'home-evidence', action: '응답 기록 보기' },
-  { image: actCapture, label: 'Act 기록', title: '선택한 버튼, 그리고 멈춘 이유.', detail: '기록된 화면 이동과 이탈 근거', target: 'home-evidence', action: '행동 기록 보기' },
-  { image: reportCapture, label: '데모 리포트', title: '어느 화면을 먼저 확인할까.', detail: '동일한 AI 패널의 화면별 도달', target: 'home-demo-summary', action: '집계 결과 보기' },
+  { image: prototypeCapture, label: 'SAAS & 캘린더', title: '일정메이트 온보딩', target: 'home-evidence' },
+  { image: askCapture, label: '핀테크 & 자산', title: '계좌 송금 흐름', target: 'home-evidence' },
+  { image: actCapture, label: '서브스크립션', title: '멤버십 선택 화면', target: 'home-demo-summary' },
+  { image: reportCapture, label: '이커머스 & 중고거래', title: '캠퍼스 거래 화면', target: 'home-evidence' },
 ];
 const desktopQuery = '(min-width: 1100px)';
 const subscribeDesktop = callback => {
@@ -64,9 +64,9 @@ function DesktopHome({ studyList, draftMeta, onOpen, onCreate, onAll }) {
   const evidence = result.act.end.drop_reason ? DROP_LABELS[result.act.end.drop_reason] : '목표 화면 도달';
   return <main className="cosmos-home-desktop">
     <section className="home-orbit-hero" aria-labelledby="home-title" data-paused={paused || reduced}>
-      <div className="home-case-stage" role="group" aria-label="일정메이트 실제 데모 화면 사례">{caseCards.map((card, index) => <div className={`home-case-float home-case-position-${index}`} key={card.label}><a className="home-case" href={`#${card.target}`} onClick={event => { if (card.target === 'home-evidence') setSelected(firstEvidence); jumpTo(event, card.target); }} aria-label={`${card.label} · ${card.title} · ${card.action}`}><div className={`home-case-image home-case-image-${index}`}><img src={card.image} alt={`일정메이트의 실제 ${card.label} 화면 캡처`} width="440" height="220" /></div><div className="home-case-caption"><span>{card.label} · AI 데모</span><h3>{card.title}</h3><p>{card.detail}</p><span className="home-case-action">{card.action} <ArrowUpRight size={15} aria-hidden="true" /></span></div></a></div>)}</div>
+      <div className="home-case-stage" role="group" aria-label="Stitch 디자인 예시 갤러리">{caseCards.map((card, index) => <div className={`home-case-float home-case-position-${index}`} key={card.label}><a className="home-case" href={`#${card.target}`} onClick={event => { if (card.target === 'home-evidence') setSelected(firstEvidence); jumpTo(event, card.target); }} aria-label={`${card.label} · ${card.title} · 일정메이트 데모 보기`}><div className={`home-case-image home-case-image-${index}`}><img src={card.image} alt={`${card.label} 디자인 참고 이미지`} width="440" height="220" /></div><div className="home-case-caption"><span>{card.label}</span><small>디자인 예시</small><h3>{card.title}</h3><span className="home-case-action">일정메이트 데모 보기 <ArrowUpRight size={15} aria-hidden="true" /></span></div></a></div>)}</div>
       <div className="home-orbit-core"><h1 id="home-title">좋다고 말한 사람이<br /><span>어디서 멈추는지.</span></h1><p className="home-orbit-lead">같은 AI 페르소나의 사용 전 응답과 화면 선택을 연결합니다.<br />멈춘 화면, 선택한 버튼, 표현한 이유를 함께 확인하세요.</p><div className="home-orbit-actions"><button className="home-start" onClick={onCreate}>새 테스트 시작하기 <ArrowUpRight size={19} /></button><a className="home-method-link" href="#home-evidence" onClick={event => jumpTo(event, 'home-evidence')}>검증 과정 살펴보기 <ArrowDown size={17} /></a></div><p className="home-first-disclosure">AI 페르소나 시뮬레이션 · 실사용자 조사 결과가 아닙니다.</p></div>
-      <div className="home-orbit-foot"><p>일정메이트의 실제 데모 화면 · 카드를 가리키거나 키보드로 선택하면 멈춥니다.</p><button className="home-motion-control" disabled={reduced} aria-pressed={paused || reduced} onClick={() => setPaused(value => !value)}>{reduced ? '움직임 줄이기 적용' : paused ? '카드 움직임 재생' : '카드 움직임 멈추기'}</button></div>
+      <div className="home-orbit-foot"><p>카드 이미지는 Stitch 디자인 예시입니다 · 호버하거나 키보드로 선택하면 공전이 멈춥니다.</p><button className="home-motion-control" disabled={reduced} aria-pressed={paused || reduced} onClick={() => setPaused(value => !value)}>{reduced ? '움직임 줄이기 적용' : paused ? '카드 움직임 재생' : '카드 움직임 멈추기'}</button></div>
     </section>
 
     {draftMeta && <aside className="home-draft"><div><span>작성 중인 테스트 · {draftMeta.step + 1}/4단계</span><strong>{draftMeta.name}</strong></div><button className="home-text-link" onClick={onCreate}>이어서 설정하기 <ArrowRight size={18} /></button></aside>}
