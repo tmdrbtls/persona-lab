@@ -1,5 +1,5 @@
 /* 시안 C · 리포트 — 거대한 숫자 하나, 세리프 목소리, 파랑 하나 */
-:root{--bg:#ECECE8;--surface:#F6F6F3;--ink:#17171B;--sub:#5B5B63;--line:#C8C8C2;--accent:#2340FF;--drop:#2340FF;--done:#17171B;--ai:#17171B;--real:#A9A9AE;--radius:0px;--display:"Black Han Sans",Pretendard,sans-serif;--serif:Hahmlet,"Noto Serif KR",serif;--phone-body:linear-gradient(160deg,#2a2a2e,#0d0d10)}
+:root{--bg:#ECECE8;--surface:#F6F6F3;--ink:#17171B;--sub:#5B5B63;--line:#C8C8C2;--accent:#2340FF;--drop:#2340FF;--done:#17171B;--ai:#17171B;--real:#A9A9AE;--radius:0px;--display:"Black Han Sans","Pretendard Variable",Pretendard,sans-serif;--serif:Hahmlet,"Noto Serif KR",serif;--phone-body:linear-gradient(160deg,#2a2a2e,#0d0d10)}
 .blue{color:var(--accent)!important}
 .btn-primary{border-radius:0;background:var(--ink)}.btn-ghost{border-radius:0;box-shadow:inset 0 0 0 2px var(--ink)}
 .nav{display:flex;align-items:center;padding:28px 0 20px}.brand{font-weight:800;text-decoration:none;font-size:18px;margin-right:auto;letter-spacing:-.3px}.nav nav{display:flex;gap:22px;font-size:14px;font-weight:700}.nav nav a{text-decoration:none;color:var(--sub)}.nav nav a.on{color:var(--ink);text-decoration:underline;text-underline-offset:6px;text-decoration-thickness:2px}

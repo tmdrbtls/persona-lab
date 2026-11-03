@@ -1,5 +1,5 @@
 /* 시안 B · 스튜디오 — 차가운 스톤, 위에서 내리는 조명, 둥근 재질 패널, 짙은 초록 하나 */
-:root{--bg:#D9DCD7;--surface:#F4F5F2;--ink:#1E2A26;--sub:#56625D;--line:#C9CEC8;--accent:#1F5C49;--drop:#B4442E;--done:#1F5C49;--ai:#1E2A26;--real:#9AA59F;--radius:12px;--font:"IBM Plex Sans KR",Pretendard,system-ui,sans-serif;--phone-body:linear-gradient(160deg,#3a3f44,#15181b);
+:root{--bg:#D9DCD7;--surface:#F4F5F2;--ink:#1E2A26;--sub:#56625D;--line:#C9CEC8;--accent:#1F5C49;--drop:#B4442E;--done:#1F5C49;--ai:#1E2A26;--real:#9AA59F;--radius:12px;--font:"IBM Plex Sans KR","Pretendard Variable",Pretendard,system-ui,sans-serif;--phone-body:linear-gradient(160deg,#3a3f44,#15181b);
 --lift:0 1px 0 rgba(255,255,255,.75) inset,0 16px 34px -20px rgba(30,42,38,.5)}
 html{background:#D3D6D1}body{background:radial-gradient(ellipse 1100px 640px at 50% 0%,#EEF0EC,var(--bg) 70%,#D3D6D1) no-repeat,#D3D6D1}
 body:after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.05;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}

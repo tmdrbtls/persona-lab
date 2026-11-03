@@ -1,5 +1,15 @@
 # PersonaLab
 
+## 디자인 시안 배포 주소 (2026-11-03)
+
+- 시안 A · 정밀: <https://personalab-variant-a.vercel.app>
+- 시안 B · 스튜디오: <https://personalab-variant-b.vercel.app>
+- 시안 C · 리포트: <https://personalab-variant-c.vercel.app>
+
+세 시안 모두 랜딩 → 로그인 → 내 테스트 → 제품 기획 → 프로토타입 → AI 패널 → 실행 → 결과 → 참가자 화면까지 같은 흐름을 따르고, 디자인만 다릅니다. 흐름 설명은 [docs/frontend-workflow.md](docs/frontend-workflow.md)에 있습니다. 소스는 `variants/a`, `variants/b`, `variants/c`이고 공통 모듈은 `variants/shared`에서 고친 뒤 `variants/build.sh`로 각 시안 폴더에 복사합니다. Vercel은 `flow-variants` 브랜치를 배포하므로, 작업 브랜치 `design/flow-variants`를 푸시할 때 `flow-variants`에도 같이 푸시합니다. 모든 수치와 AI 응답은 데모 데이터이며 백엔드와 연결되어 있지 않습니다.
+
+---
+
 AI Persona의 사용 의향과 프로토타입 행동을 연결해 보여주는 제품 사전 검증 프런트엔드 데모입니다.
 
 ## 배포
