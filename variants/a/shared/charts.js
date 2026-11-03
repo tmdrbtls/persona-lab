@@ -68,7 +68,7 @@
     s += `<line class="axis" x1="${x0}" y1="${base + r + 6}" x2="${x1}" y2="${base + r + 6}"/>`;
     placed.forEach(({ x, y, p }) => { s += `<circle class="tok t-${p.tool}${p.id === selId ? " sel" : ""}" data-id="${p.id}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}"><title>${p.id}</title></circle>`; });
     const sel = placed.find(q => q.p.id === selId);
-    if (sel) s += `<circle class="sel-ring" cx="${sel.x}" cy="${sel.y}" r="${r + 6}"/><line class="sel-stem" x1="${sel.x}" y1="${sel.y - r - 8}" x2="${sel.x}" y2="${top - 26}"/><text class="sel-label" x="${sel.x}" y="${top - 34}" text-anchor="middle">${sel.id}</text>`;
+    if (sel) s += `<circle class="sel-ring" cx="${sel.x}" cy="${sel.y}" r="${r + 6}"/><line class="sel-stem" x1="${sel.x}" y1="${sel.y - r - 8}" x2="${sel.x}" y2="${top - 26}"/><text class="sel-label" x="${sel.x}" y="${top - 34}" text-anchor="middle">${sel.p.id}</text>`;
     s += `<text class="axis-label" x="${x0}" y="${base + r + 30}">가격에 둔감</text><text class="axis-label" x="${x1}" y="${base + r + 30}" text-anchor="end">가격에 민감</text></svg>`;
     return s;
   }
