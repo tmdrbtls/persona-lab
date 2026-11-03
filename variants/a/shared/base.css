@@ -129,3 +129,4 @@ fieldset{border:0;margin-bottom:18px}legend{font-weight:600;margin-bottom:10px}.
 .field input,.field textarea,.field select{width:100%;min-width:0}.v-login{overflow-x:hidden}.login-card{min-width:0}
 .email{margin-top:4px}.email .field{margin-bottom:12px}.email .btn-primary{margin-top:6px;padding:13px 18px}
 .login-foot a{text-decoration:underline;text-underline-offset:3px}
+.btn-social{display:flex;align-items:center;justify-content:center;gap:10px}.brand-ico{width:18px;height:18px;flex:none;fill:currentColor}
