@@ -1,0 +1,61 @@
+/* 시안 A · 정밀 — 카드·그림자 없이 선과 여백, 이탈에만 빨강 */
+:root{--bg:#F5F5F3;--surface:#fff;--ink:#16181D;--sub:#6B6F78;--line:#D4D4D0;--accent:#E5372B;--drop:#E5372B;--done:#16181D;--ai:#16181D;--real:#A7AAB1;--radius:0px;--phone-body:linear-gradient(160deg,#f3f4f6,#c9cdd3)}
+.btn-primary{border-radius:0}.btn-ghost{border-radius:0;box-shadow:inset 0 0 0 1.5px var(--ink)}
+.nav{display:flex;align-items:center;gap:28px;height:64px;margin:0 0 0;border-bottom:1px solid var(--ink);font-size:14px}
+.nav .brand{font-weight:800;text-decoration:none;margin-right:auto;letter-spacing:-.2px}.nav nav{display:flex;gap:24px}.nav nav a{text-decoration:none;color:var(--sub)}.nav nav a.on{color:var(--ink);font-weight:700}
+.nav-cta{text-decoration:none;font-weight:700;border-bottom:1.5px solid var(--ink)}
+.v-land,.v-tests,.v-setup,.v-run,.v-report{max-width:1328px;margin:0 auto;padding-left:56px;padding-right:56px}
+.steps{margin-top:18px;gap:0}.steps li{border-bottom:1.5px solid var(--line)}.steps .on{border-color:var(--ink)}.steps a{padding:8px 16px 8px 0}
+/* 랜딩 */
+.hero{padding:96px 0 72px;display:grid;grid-template-columns:7fr 5fr;column-gap:48px;align-items:end;border-bottom:1px solid var(--ink)}
+.hero h1{font-size:clamp(48px,7.6vw,112px);line-height:1;letter-spacing:-.045em;font-weight:800;grid-row:span 2}
+.lede{font-size:18px;line-height:1.65;max-width:34em;margin-bottom:24px}.hero-cta{display:flex;gap:12px}
+.saydo{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--ink)}
+.saydo>div{padding:32px 24px 32px 0;border-right:1px solid var(--line)}.saydo>div:nth-child(3){border-right:0;padding-left:24px}.saydo>div:nth-child(2){padding-left:24px}
+.saydo .k{display:block;font-size:14px;color:var(--sub)}.saydo b{display:block;font-size:clamp(64px,9vw,140px);line-height:.95;letter-spacing:-.05em;font-weight:700}.saydo b small{font-size:.35em;letter-spacing:0;margin-left:4px}
+.saydo b.dim{color:var(--real)}.saydo .d{font-size:15px;font-weight:600}.saydo .foot{grid-column:1/-1;font-size:12px;color:var(--sub);padding:10px 0}
+.how{padding:72px 0;display:grid;grid-template-columns:4fr 8fr;column-gap:48px;border-bottom:1px solid var(--ink)}.how h2,.preview h2{font-size:28px;letter-spacing:-.6px;line-height:1.25}
+.how ol{list-style:none;counter-reset:s}.how li{counter-increment:s;display:grid;grid-template-columns:56px 1fr;padding:18px 0;border-top:1px solid var(--line)}.how li:before{content:counter(s);font-size:28px;font-weight:700;grid-row:span 2}
+.how li b{font-size:18px}.how li p{color:var(--sub);max-width:36em}
+.preview{padding:72px 0}.pv-grid{display:grid;grid-template-columns:8fr 4fr;gap:48px;margin-top:28px;align-items:start}
+.pv-side{display:flex;flex-direction:column;gap:4px}.pv-side .k{font-size:13px;color:var(--sub);margin-top:14px}.pv-side b{font-size:24px;letter-spacing:-.4px}.pv-side .btn-ghost{margin-top:24px;align-self:start}
+.land-foot{display:flex;justify-content:space-between;gap:24px;padding:24px 0 40px;border-top:1px solid var(--ink);font-size:13px;color:var(--sub)}.land-foot span:first-child{font-weight:800;color:var(--ink)}
+/* 로그인 */
+.v-login{grid-template-columns:1fr;background:linear-gradient(90deg,var(--ink) 0 38%,var(--bg) 38%)}.v-login .brand{color:var(--bg)}
+.login-card{margin-left:38%;padding-left:64px}.btn-social{border-radius:0}
+/* 패널 */
+.panel3{display:grid;grid-template-columns:272px 1fr 300px;gap:40px;margin-top:28px}
+.p-left h1{font-size:30px;line-height:1.2;letter-spacing:-.8px;margin-bottom:6px}.p-left .sub{font-size:13px;margin-bottom:12px}
+.set{border-top:1px solid var(--line);padding:10px 0}.set-label{font-size:12px;color:var(--sub);margin-bottom:6px}
+.seg{display:flex;gap:14px;flex-wrap:wrap}.seg button{font-size:14px;color:var(--sub);padding:2px 0;border-bottom:2px solid transparent}.seg button[aria-checked=true]{color:var(--ink);font-weight:700;border-color:var(--ink)}
+.redo{display:block;width:100%;text-align:left;font-weight:700;border-top:1px solid var(--ink);padding:12px 0 6px;margin-top:6px}
+.p-mid h2{font-size:17px}.p-mid .sub{font-size:13px;margin:4px 0 10px;max-width:46em}.chart-box svg{width:100%;height:auto}
+.check{font-size:13px;border-top:1px solid var(--line);padding-top:10px}
+.pid-big{font-size:64px;font-weight:700;letter-spacing:-.05em;line-height:1;color:var(--accent)}.p-right .who{font-weight:700;margin-top:8px}.p-right .tool{font-size:13px;color:var(--sub);margin-bottom:14px}
+.fact{display:grid;grid-template-columns:92px 1fr 36px;gap:10px;align-items:center;font-size:13px;padding:7px 0;border-top:1px solid var(--line)}.fact i{height:5px;background:var(--line);display:block}.fact em{display:block;height:100%;background:var(--ink)}.fact b{text-align:right}
+.pos{font-size:13px;margin:14px 0;border-top:1px solid var(--ink);padding-top:10px}.pos b{color:var(--accent)}
+.profile span{font-size:12px;color:var(--sub)}.profile p{font-size:14px;margin:2px 0 12px}
+.traits{display:flex;flex-wrap:wrap;gap:6px}.traits span{font-size:12px;border:1px solid var(--ink);padding:1px 7px}
+/* 실행 */
+.run-grid{display:grid;grid-template-columns:280px 1fr 300px;gap:32px;margin-top:20px;min-height:calc(100vh - 100px)}
+.phase{font-size:13px;font-weight:700;margin-bottom:12px}.big{border-top:1px solid var(--line);padding:10px 0 14px}.big .k{font-size:13px;color:var(--sub);display:block}
+.big b{font-size:64px;line-height:.95;letter-spacing:-.05em;font-weight:700}.big b small{font-size:22px;color:var(--sub);letter-spacing:0;margin-left:2px}.big .red,.red{color:var(--drop)}
+.bars div{font-size:12px;margin:8px 0}.bars i{display:block;height:4px;background:var(--line);margin-top:4px}.bars em{display:block;height:100%;width:0;background:var(--ink);transition:width .3s}
+.task{border-top:1px solid var(--ink);padding-top:10px;margin-top:14px;font-weight:600}.task small{display:block;font-weight:400;color:var(--sub);font-size:13px}
+.ctl{display:flex;gap:18px;margin:18px 0}.ctl button{font-weight:700;border-bottom:1.5px solid var(--ink);font-size:14px}.to-report{width:100%}
+.r-stage{position:relative;display:flex;flex-direction:column}.orbit-box{height:min(600px,68vh);--persp:1900px;--po:6%;margin-top:-10px}
+.o-plate{border-color:var(--ink)}.o-pid{border-radius:0;box-shadow:none;background:transparent}
+.focus{font-size:13px;text-align:center;color:var(--sub);margin-top:64px;min-height:20px}.focus b{color:var(--ink)}
+.r-log h2{font-size:14px;border-bottom:1px solid var(--ink);padding-bottom:8px}.log{max-height:70vh;overflow:auto}
+.log-row{font-size:13px;padding:8px 0;border-bottom:1px solid var(--line)}.log-row b{margin-right:6px}.log-row.drop{color:var(--drop)}.log-row q{display:block;color:var(--sub);quotes:"“" "”";margin-top:2px}
+/* 결과 */
+.rp-head{display:flex;justify-content:space-between;align-items:end;gap:24px;margin:28px 0 8px}.rp-head h1{font-size:30px;letter-spacing:-.7px;line-height:1.2}.rp-head .sub{font-size:13px}
+.rp-top{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);margin-top:20px}
+.kpi{padding:18px 20px 18px 0}.kpi .k{font-size:13px;color:var(--sub);display:block}.kpi b{font-size:72px;letter-spacing:-.05em;line-height:1;font-weight:700}.kpi b.dim{color:var(--real)}
+.gap{grid-column:1/-1;font-size:16px;font-weight:700;padding:12px 0;border-top:1px solid var(--line)}
+.rp-row{display:grid;grid-template-columns:7fr 5fr;gap:48px;padding:36px 0;border-bottom:1px solid var(--line)}.rp-row.three{grid-template-columns:repeat(3,1fr)}
+.rp-row h2{font-size:17px;margin-bottom:4px}.rp-row .sub{font-size:13px;margin-bottom:12px}.rp-funnel svg{width:100%;height:auto}
+.cell{border-radius:0}.rp-person{border-top:1px solid var(--ink);padding-top:14px;align-self:start}
+@media (max-width:1100px){.panel3,.run-grid{grid-template-columns:1fr}.orbit-box{height:520px}.rp-row,.rp-row.three,.pv-grid,.how,.hero{grid-template-columns:1fr}.hero h1{grid-row:auto;margin-bottom:24px}}
+@media (max-width:860px){.v-land,.v-tests,.v-setup,.v-run,.v-report{padding-left:16px;padding-right:16px}.nav nav{display:none}.saydo,.rp-top{grid-template-columns:1fr}.saydo>div{border-right:0;padding-left:0!important;border-bottom:1px solid var(--line)}
+.v-login{background:var(--bg)}.v-login .brand{color:var(--ink)}.login-card{margin-left:0;padding-left:0}.orbit-box{height:440px}}

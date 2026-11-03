@@ -70,13 +70,24 @@
     return round2(clamp(lo + r() * (hi - lo), 0.02, 0.98));
   }
 
+  // '전체'일 때는 공개 분포 비율대로 정확히 나눠 뽑는다 (층화 샘플링)
+  function quota(r, n, choice, mixKey) {
+    if (choice !== "all") return Array(n).fill(choice);
+    const mix = PUBLIC_MIX[mixKey], out = [];
+    Object.entries(mix).forEach(([b, w]) => { for (let i = 0; i < Math.round(n * w); i++) out.push(b); });
+    while (out.length < n) out.push("mid"); out.length = n;
+    for (let i = out.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [out[i], out[j]] = [out[j], out[i]]; }
+    return out;
+  }
+  function inBand(r, band) { const [lo, hi] = BANDS[band]; return round2(clamp(lo + 0.01 + r() * (hi - lo - 0.02), 0.02, 0.98)); }
   function generatePersonas(panel) {
     const r = rng(hash(JSON.stringify(panel)));
+    const qp = quota(r, panel.count, panel.price, "price"), qv = quota(r, panel.count, panel.privacy, "privacy");
     const [aLo, aHi] = panel.age.split("-").map(Number);
     return Array.from({ length: panel.count }, (_, i) => {
       const occupation = panel.occupation === "all" ? (r() < 0.6 ? "student" : "worker") : panel.occupation;
-      const price = sampleBand(r, panel.price, "price");
-      const privacy = sampleBand(r, panel.privacy, "privacy");
+      const price = inBand(r, qp[i]);
+      const privacy = inBand(r, qv[i]);
       const app = round2(bell(r, occupation === "student" ? 0.66 : 0.55, 0.5));
       const digital = round2(bell(r, 0.62, 0.55));
       const tool = pickWeighted(r, TOOL_MIX);
