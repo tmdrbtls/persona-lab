@@ -166,7 +166,7 @@
   V.login = {
     html: () => `<main class="v-login"><a class="brand" href="#/">personalab</a><section class="login-card"><h1>로그인</h1><p class="sub">테스트 기록은 계정에 저장됩니다.</p>
       <button class="btn-social google" data-go="tests">구글로 계속하기</button><button class="btn-social kakao" data-go="tests">카카오로 계속하기</button>
-      <div class="or"><span>또는 이메일로</span></div><form class="email" novalidate><label>이메일<input type="email" name="email" autocomplete="email" placeholder="name@school.ac.kr"></label><label>비밀번호<input type="password" name="pw" autocomplete="current-password"></label>
+      <div class="or"><span>또는 이메일로</span></div><form class="email" novalidate><label class="field">이메일<input type="email" name="email" autocomplete="email" placeholder="name@school.ac.kr"></label><label class="field">비밀번호<input type="password" name="pw" autocomplete="current-password"></label>
       <p class="err" role="alert" hidden></p><button class="btn-primary" type="submit">로그인</button></form><div class="login-foot"><a href="#/login">비밀번호 다시 설정</a><a href="#/login">이메일로 가입하기</a></div>
       <p class="demo-note">데모 버전입니다. 실제 계정 인증 없이 데모 사용자로 들어갑니다.</p></section></main>`,
     mount: root => {
