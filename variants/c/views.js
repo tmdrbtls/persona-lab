@@ -10,7 +10,7 @@
       const vp = APP.pById(voice.id);
       return `<main class="v-land">${V.nav("land")}
       <section class="hero"><p class="kicker">AI 사용자 ${rep.n}명에게 물었더니</p><div class="giant-row"><span class="giant">${rep.saidYesRate}</span><span class="g-unit">%가<br>쓰겠다고 했습니다</span></div>
-        <p class="kicker">직접 써보게 했더니</p><div class="giant-row"><span class="giant blue">${rep.aiRate}</span><span class="g-unit">%만<br>가입을 끝냈습니다</span></div></section>
+        <p class="kicker">직접 써보게 했더니</p><div class="giant-row"><span class="giant ocean">${rep.aiRate}</span><span class="g-unit">%만<br>가입을 끝냈습니다</span></div></section>
       <section class="claim"><h1>묻지 않고, 써보게 합니다.</h1><div class="claim-body"><p>PersonaLab은 AI 페르소나에게 피그마 프로토타입을 직접 조작하게 하고, 어느 화면에서 왜 멈추는지 기록합니다. 실제 사용자 ${rep.realN}명에게 같은 과제를 시켜, AI 예측이 얼마나 틀리는지도 결과 옆에 붙입니다.</p>
         <div class="hero-cta"><a class="btn-primary" href="#/login">시작하기</a><a class="btn-ghost" href="#/report">샘플 결과 보기</a></div></div></section>
       <section class="voice"><div class="v-quote">“${esc(voice.ask.quote)}”</div><div class="v-meta"><b>${voice.id}</b> ${who(vp)} · 기획서를 읽고 사용 의향 ${voice.ask.intent}/5</div>

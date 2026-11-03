@@ -1,5 +1,5 @@
 /* 시안 A · 정밀 — 카드·그림자 없이 선과 여백, 이탈에만 빨강 */
-:root{--bg:#F5F5F3;--surface:#fff;--ink:#16181D;--sub:#6B6F78;--line:#D4D4D0;--accent:#E5372B;--drop:#E5372B;--done:#16181D;--ai:#16181D;--real:#A7AAB1;--radius:0px;--phone-body:linear-gradient(160deg,#f3f4f6,#c9cdd3)}
+:root{--bg:#F3F6F9;--surface:#fff;--ink:#12233D;--sub:#5E6B7E;--line:#D3DCE6;--accent:#D9481F;--drop:#C23D18;--done:#12233D;--ai:#12233D;--real:#4F90C6;--sky:#9FCDEF;--sky-strong:#1F6FB2;--radius:0px;--phone-body:linear-gradient(160deg,#f4f7fa,#c3cfdc)}
 .btn-primary{border-radius:0}.btn-ghost{border-radius:0;box-shadow:inset 0 0 0 1.5px var(--ink)}
 .nav{display:flex;align-items:center;gap:28px;height:64px;margin:0 0 0;border-bottom:1px solid var(--ink);font-size:14px}
 .nav .brand{font-weight:800;text-decoration:none;margin-right:auto;letter-spacing:-.2px}.nav nav{display:flex;gap:24px}.nav nav a{text-decoration:none;color:var(--sub)}.nav nav a.on{color:var(--ink);font-weight:700}
@@ -21,7 +21,7 @@
 .pv-side{display:flex;flex-direction:column;gap:4px}.pv-side .k{font-size:13px;color:var(--sub);margin-top:14px}.pv-side b{font-size:24px;letter-spacing:-.4px}.pv-side .btn-ghost{margin-top:24px;align-self:start}
 .land-foot{display:flex;justify-content:space-between;gap:24px;padding:24px 0 40px;border-top:1px solid var(--ink);font-size:13px;color:var(--sub)}.land-foot span:first-child{font-weight:800;color:var(--ink)}
 /* 로그인 */
-.v-login{grid-template-columns:1fr;background:linear-gradient(90deg,var(--ink) 0 38%,var(--bg) 38%)}.v-login .brand{color:var(--bg)}
+.v-login{grid-template-columns:1fr;background:linear-gradient(90deg,var(--sky) 0 38%,var(--bg) 38%)}.v-login .brand{color:var(--ink)}
 .login-card{margin-left:38%;padding-left:64px}.btn-social{border-radius:0}
 /* 패널 */
 .panel3{display:grid;grid-template-columns:272px 1fr 300px;gap:40px;margin-top:28px}
@@ -59,5 +59,17 @@
 @media (max-width:1100px){.panel3,.run-grid{grid-template-columns:1fr}.orbit-box{height:520px}.rp-row,.rp-row.three,.pv-grid,.how,.hero{grid-template-columns:1fr}.hero h1{grid-row:auto;margin-bottom:24px}}
 @media (max-width:860px){.v-land,.v-tests,.v-setup,.v-run,.v-report{padding-left:16px;padding-right:16px}.nav nav{display:none}.saydo,.rp-top{grid-template-columns:1fr}.saydo>div{border-right:0;padding-left:0!important;border-bottom:1px solid var(--line)}
 .v-login{background:var(--bg)}.v-login .brand{color:var(--ink)}.login-card{margin-left:0;padding-left:0}.orbit-box{height:440px}}
-.v-login:before{content:"묻지 않고,\A써보게 합니다.";white-space:pre;position:absolute;left:56px;bottom:56px;color:#F5F5F3;font-size:clamp(36px,4vw,60px);font-weight:800;letter-spacing:-.04em;line-height:1.05}
+.v-login:before{content:"묻지 않고,\A써보게 합니다.";white-space:pre;position:absolute;left:56px;bottom:56px;color:var(--ink);font-size:clamp(36px,4vw,60px);font-weight:800;letter-spacing:-.04em;line-height:1.05}
 @media (max-width:860px){.v-login:before{display:none}}
+
+/* 팔레트: 하늘색이 주색, 앰버 레드는 포인트 */
+.btn-primary{background:var(--sky-strong);color:#fff}.btn-primary:disabled{background:var(--real)}
+.nav{border-bottom-color:var(--ink)}.nav-cta{border-color:var(--sky-strong);color:var(--sky-strong)}
+.steps .on{border-color:var(--sky-strong)}.seg button[aria-checked=true]{border-color:var(--sky-strong)}
+.saydo>div:nth-child(2) b,.kpi:nth-child(2) b{color:var(--sky-strong)}
+.saydo,.how,.hero{border-color:var(--ink)}.saydo>div:nth-child(2){background:linear-gradient(180deg,rgba(159,205,239,.28),rgba(159,205,239,0))}
+.how li:before{color:var(--sky-strong)}
+.bars em{background:var(--sky-strong)}.chart .bar-sample{fill:var(--sky-strong)}.chart .bar-target{fill:#CFE3F4}
+.chart .dot{fill:var(--ink);fill-opacity:.7}.traits span{border-color:var(--sky-strong);color:var(--sky-strong)}
+.o-plate{border-color:var(--sky-strong);background:radial-gradient(circle,rgba(159,205,239,.32),rgba(159,205,239,0) 70%)}
+.ctl button{border-color:var(--sky-strong)}.to-report.ready{background:var(--accent)}

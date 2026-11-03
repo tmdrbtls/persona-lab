@@ -87,7 +87,7 @@ fieldset{border:0;margin-bottom:18px}legend{font-weight:600;margin-bottom:10px}.
 .inv-row button{padding:9px 14px;border-radius:var(--radius);background:var(--ink);color:var(--bg);font-weight:700;font-size:13px;white-space:nowrap}
 
 /* ---------- 3D 궤도 ---------- */
-.orbit{position:relative;touch-action:pan-y;cursor:grab;user-select:none;overflow:hidden}.orbit:active{cursor:grabbing}
+.orbit{position:relative;touch-action:pan-y;cursor:grab;user-select:none}.orbit:active{cursor:grabbing}
 .o-cam{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;perspective:var(--persp,1600px);perspective-origin:50% var(--po,20%)}
 .o-ring{position:relative;width:0;height:0;transform-style:preserve-3d}
 .o-dev{position:absolute;left:0;top:0;transform-style:preserve-3d}
@@ -118,7 +118,7 @@ fieldset{border:0;margin-bottom:18px}legend{font-weight:600;margin-bottom:10px}.
 @media (prefers-reduced-motion:reduce){.tap{animation:none;opacity:.8}}
 
 /* 모바일 */
-@media (max-width:860px){.o-cam{transform:scale(.62);transform-origin:50% 50%}}
+@media (max-width:860px){.orbit{overflow:hidden}.o-cam{transform:scale(.62);transform-origin:50% 50%}}
 @media (max-width:420px){.o-cam{transform:scale(.52)}}
 @media (max-width:860px){
   .setup-grid,.setup-grid.wide{grid-template-columns:1fr}.pp-cols{grid-template-columns:1fr}

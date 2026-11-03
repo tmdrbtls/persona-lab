@@ -30,7 +30,7 @@
     html: s => `<main class="v-setup v-panel">${V.nav("setup")}${steps("new/panel")}<div class="panel3">
       <section class="p-left"><h1>누구에게<br>써보게 할까요</h1><p class="sub">한 명씩 만들지 않고 분포를 고릅니다.</p>${["count", "occupation", "age", "price", "privacy"].map(k => seg(k)).join("")}
         <button class="redo" data-act="redraw">패널 다시 뽑기</button><p class="hint">NVIDIA 한국인 페르소나에 한국미디어패널의 소비 습관을 짝지어 뽑습니다. 학습이 아니라 샘플링입니다.</p></section>
-      <section class="p-mid"><h2><span data-slot="count"></span>명이 이렇게 퍼져 있습니다</h2><p class="sub">점 하나가 한 사람입니다. 점을 누르면 오른쪽에 그 사람이 나옵니다. 축 바깥 막대는 목표 분포(회색)와 실제로 뽑힌 분포(검정)입니다.</p>
+      <section class="p-mid"><h2><span data-slot="count"></span>명이 이렇게 퍼져 있습니다</h2><p class="sub">점 하나가 한 사람입니다. 점을 누르면 오른쪽에 그 사람이 나옵니다. 축 바깥 막대는 목표 분포(연한 막대)와 실제로 뽑힌 분포(진한 막대)입니다.</p>
         <div data-slot="chart" class="chart-box"></div><p class="check" data-slot="check"></p></section>
       <section class="p-right" data-slot="side" aria-live="polite"></section></div>
       <footer class="setup-foot"><button class="btn-ghost" data-go="new/prototype">이전: 프로토타입</button><span class="save-state">자동 저장됨</span><button class="btn-primary" data-go="run">이 패널로 실행하기</button></footer></main>`,
