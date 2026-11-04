@@ -1,56 +1,44 @@
 # PersonaLab
 
-## 디자인 시안 배포 주소 (2026-11-03)
+AI 사용자 100명에게 프로토타입을 직접 써보게 하고, 어디서 왜 멈추는지와 그 예측이 실제 사용자와 얼마나 다른지를 함께 보여주는 제품 사전 검증 서비스의 프론트엔드입니다.
+
+## 배포 주소
+
+디자인 시안 세 개 (`flow-variants` 브랜치)
 
 - 시안 A · 정밀: <https://personalab-variant-a.vercel.app>
 - 시안 B · 스튜디오: <https://personalab-variant-b.vercel.app>
 - 시안 C · 리포트: <https://personalab-variant-c.vercel.app>
 
-세 시안 모두 랜딩 → 로그인 → 내 테스트 → 제품 기획 → 프로토타입 → AI 패널 → 실행 → 결과 → 참가자 화면까지 같은 흐름을 따르고, 디자인만 다릅니다. 흐름 설명은 [docs/frontend-workflow.md](docs/frontend-workflow.md)에 있습니다. 소스는 `variants/a`, `variants/b`, `variants/c`이고 공통 모듈은 `variants/shared`에서 고친 뒤 `variants/build.sh`로 각 시안 폴더에 복사합니다. Vercel은 `flow-variants` 브랜치를 배포하므로, 작업 브랜치 `design/flow-variants`를 푸시할 때 `flow-variants`에도 같이 푸시합니다. 모든 수치와 AI 응답은 데모 데이터이며 백엔드와 연결되어 있지 않습니다.
+기존 통합 데모 (`main` 브랜치): <https://persona-lab-blue.vercel.app>
 
----
+세 시안은 랜딩, 로그인, 내 테스트, 제품 기획, 프로토타입, AI 패널, 실행, 결과, 참가자 화면까지 같은 흐름을 따르고 디자인만 다릅니다. 모든 수치와 AI 응답은 데모 데이터이며 백엔드와 연결되어 있지 않습니다.
 
-AI Persona의 사용 의향과 프로토타입 행동을 연결해 보여주는 제품 사전 검증 프런트엔드 데모입니다.
+## 브랜치
 
-## 배포
+`main`은 2026-10-03에 합친 React/Vite 통합 데모입니다. 최종 시안이 정해지면 여기에 합칩니다.
 
-<https://persona-lab-blue.vercel.app>
+`design/flow-variants`가 지금 작업하는 브랜치이고, `flow-variants`는 같은 내용을 Vercel에 배포하기 위한 사본입니다(Vercel이 브랜치 이름의 `/`를 처리하지 못해서). 작업을 푸시할 때는 두 브랜치에 함께 올려야 세 시안 주소가 갱신됩니다.
 
-GitHub의 `main` 브랜치가 Vercel 프로젝트에 연결되어 있습니다. 이 저장소에 푸시된 React/Vite 소스 전체를 Vercel이 직접 빌드하고 같은 프로덕션 주소에 자동 배포합니다.
+`archive/old-branches`는 예전 시안 브랜치들을 보관한 것입니다. 이 브랜치의 마지막 커밋이 아래 네 브랜치의 마지막 커밋을 부모로 가지고 있어서, 필요하면 그 커밋에서 브랜치를 다시 만들 수 있습니다.
 
-통합 UI 브랜치 `feat/integrated-personalab-ux`의 배포 미리보기: <https://persona-4a03ewjy0-ssg03177-6149.vercel.app>
-미리보기는 2026-10-03 커밋 기준이며, 위 프로덕션 주소는 `main` 반영 후 갱신됩니다.
+- `concept/cosmos-d` 코스모스 D 시안 (285b890), 배포는 <https://persona-lab-cosmos-d.vercel.app>에 남아 있음
+- `concept/journey-xray` A·B·C 시안 (b7ab949)
+- `concept/persona-flow` 핀볼 기반 시안 B (57e89b5)
+- `feat/integrated-personalab-ux` 통합 UX (d581d2b), PR #1로 `main`에 합쳐짐
 
-## 작업 기록
+## 폴더
 
-### 2026-10-03 · 통합 프론트엔드
-
-- 테스트 생성부터 AI Persona, Ask·Act 실행, 리포트와 행동 근거 확인까지 연결
-- 대시보드·테스트 목록·실행·리포트 화면 디자인 정리
-- 작성 중인 테스트의 자동 저장과 이어서 작성 추가
-- 위 Vercel 미리보기 주소에서 이번 버전 확인 가능
-
-## 로컬 실행
+`variants/`가 세 시안의 소스입니다. 공통 모듈(데이터 엔진, 그래프, 3D 궤도, 화면 흐름)은 `variants/shared`에서 고치고, `variants/build.sh`를 실행하면 각 시안 폴더(`a`, `b`, `c`)로 복사됩니다. 시안별 화면 배치는 `views.js`, 디자인은 `style.css`에 있습니다. 빌드 도구 없이 정적 파일로 동작하므로, `variants` 폴더를 아무 정적 서버로 열면 됩니다.
 
 ```bash
-npm install
-npm run dev
+cd variants && ./build.sh && python3 -m http.server 8000
+# http://localhost:8000/a/  /b/  /c/
 ```
 
-프로덕션 빌드는 `npm run build`로 확인할 수 있습니다.
+`src/`는 `main`에서 이어받은 React/Vite 통합 데모이고 `npm install && npm run dev`로 실행합니다.
 
-## 주요 기능
+## 문서
 
-- 테스트 대시보드와 목록, 설정·실행·결과를 묶는 테스트 상세
-- 제품 기획 → 프로토타입 → AI 패널 → Persona 확인으로 이어지는 테스트 생성
-- 기획서 텍스트·Markdown·PDF 읽기, 제품 정보 편집과 Persona용 미리보기
-- 화면 이미지·버튼 연결·과제·목표 화면 설정
-- Persona별 Ask → Act 진행, 프로토타입 화면 이동과 행동 Timeline
-- 실행 결과와 동일한 데이터를 사용하는 Persona별 Report 및 Evidence
-- Report의 결과 해석·검증 정보 안내
-- 의향·행동 격차 및 이탈 이유 분석
-- 근거 세션 상세 보기
-- 기존 예시 리포트의 샘플 자료 열람
-- 데스크톱·모바일 반응형 UI
-
-새 테스트의 Persona·Ask·Act 결과는 **일관된 체험 데이터**로 생성되며, 실행 화면과 리포트가 같은 결과를 사용합니다. 생성한 테스트는 가능한 경우 브라우저 로컬 저장소에 보관됩니다. AI 기획서 추출과 실제 Figma 파일 불러오기는 아직 연결되지 않았으며 화면에서 샘플 동작임을 안내합니다. 실제 사용자 검증 지표는 연결되어 있지 않습니다. 기존 예시 리포트의 참가자·버전 비교 수치는 샘플 UI 자료이며, 실제 측정값으로 사용하지 않습니다.
+- [프론트엔드 워크플로우](docs/frontend-workflow.md): 화면 흐름과 화면별 역할, API 대응
+- [PRD](docs/PRD.md), [결정 사항](docs/decisions.md), [현재 상태](docs/current-status.md), [팀원 공유사항](docs/팀원_공유사항.md)
