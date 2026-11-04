@@ -4,6 +4,5 @@ import "./styles.css";
 import "./theme.css";
 import "./integrated.css";
 import "./visual.css";
-import "./cosmos.css";
 
 createRoot(document.getElementById("root")).render(<App />);
