@@ -1,22 +1,42 @@
 // 3D 궤도 (확정 사항): 페르소나 휴대폰들이 원형 궤도를 돌며 프로토타입을 조작한다.
 (function (g) {
-  const SCREEN_BODY = {
-    S01: () => `<div class="ob-art"><i></i><i></i><i></i></div><div class="ob-t">흩어진 일정을<br>한곳에서</div><div class="ob-s">수업·과제·동아리 일정을 모아<br>오늘의 우선순위를 알려드려요</div>`,
-    S02: () => `<div class="h">회원가입</div>` + [["이메일", "minji@jnu.ac.kr"], ["비밀번호", "••••••••"], ["휴대폰 번호", "010-"]].map(([a, b]) => `<div class="lb">${a}</div><div class="in">${b}</div>`).join(""),
-    S03: () => `<div class="h">학교 정보</div>` + [["학교", "전남대학교"], ["학년", "선택"], ["전공", ""]].map(([a, b]) => `<div class="lb">${a}</div><div class="in">${b}</div>`).join(""),
-    S04: () => `<div class="h">관심분야 5개</div><div class="chips">` + [["공부", 1], ["운동", 1], ["여행", 0], ["동아리", 1], ["알바", 0], ["독서", 0], ["음악", 0], ["취업", 0]].map(([t, on]) => `<span class="${on ? "on" : ""}">${t}</span>`).join("") + `</div>`,
-    S05: () => `<div class="h">오늘 할 일</div>` + [["자료구조 과제", "오늘 23:59"], ["동아리 회의", "18:00"], ["토익 단어", "추천"]].map(([t, s]) => `<div class="todo"><b>${t}</b><small>${s}</small></div>`).join(""),
+  // 휴대폰 화면: 테스트 대상 앱 '일정메이트'의 5개 화면.
+  // 크기는 모두 em(기준 9.5px)이라 궤도·프로토타입 미리보기·참가자 화면에서 같은 비율로 보인다.
+  // 클래스는 ps- 접두어를 붙여 시안 CSS(.focus, .prog 등)와 부딪히지 않게 한다.
+  const SV = (d, w = 1.7) => `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const IC = {
+    back: SV("M10 3 5 8l5 5", 1.9), search: SV("M7 12A5 5 0 1 0 7 2a5 5 0 0 0 0 10Zm3.6-1.4L14 14"), check: SV("m3.5 8.5 3 3 6-7", 2.2),
+    home: SV("M2.5 7.5 8 3l5.5 4.5V13a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1Z"), cal: SV("M3 4h10v9H3zM3 7h10M6 2.5v3M10 2.5v3"), plus: SV("M8 3.5v9M3.5 8h9", 2), user: SV("M8 8a2.6 2.6 0 1 0 0-5.2A2.6 2.6 0 0 0 8 8Zm-5 6c.6-2.6 2.6-4 5-4s4.4 1.4 5 4"),
   };
+  const SB = `<div class="stbar"><span class="ps-time">9:41</span><span class="isl"></span><span class="ps-ind"><i class="ps-sig"><b></b><b></b><b></b><b></b></i><i class="ps-bat"></i></span></div>`;
+  // 위쪽 바: 뒤로 · 가입 진행 단계(3단계) · 건너뛰기
+  const top = (step, skip) => `<div class="ps-hd"><span class="ps-act" data-b="뒤로">${IC.back}</span><div class="ps-prog" aria-hidden="true">${[1, 2, 3].map(i => `<i class="${i <= step ? "on" : ""}"></i>`).join("")}</div><span class="ps-n">${step}/3</span>${skip ? `<span class="ps-act ps-skip" data-b="건너뛰기">건너뛰기</span>` : ""}</div>`;
+  const field = (l, v, o = {}) => `<div class="ps-fld${o.typing ? " typing" : ""}"><span class="ps-fl">${l}</span><span class="ps-fv${v ? "" : " ph"}">${v || o.ph || ""}${o.typing ? '<i class="ps-caret"></i>' : ""}</span>${o.icon || ""}${o.btn ? `<em>${o.btn}</em>` : ""}</div>`;
+  const day = (list, today) => `<div class="ps-wk">${list.map((d, i) => `<span class="${i === today ? "on" : ""}">${d}<b>${14 + i}</b></span>`).join("")}</div>`;
+  const SCREEN_BODY = {
+    S01: () => `<div class="ps-logo"><i></i>일정메이트</div>
+      <div class="ps-card">${day(["월", "화", "수", "목", "금"], 2)}<div class="ps-ev c1"><b>자료구조 과제</b><small>23:59</small></div><div class="ps-ev c2"><b>동아리 회의</b><small>18:00</small></div></div>
+      <div class="ps-big">흩어진 일정을<br>한곳에서</div><div class="ps-lede">오늘 할 일의 순서를 알려드려요</div>`,
+    S02: () => `${top(1)}<div class="ps-ttl">계정을 만들어요</div>${field("이메일", "minji@jnu.ac.kr")}${field("비밀번호", "••••••••")}${field("휴대폰 번호", "010-", { typing: true, btn: "인증" })}`,
+    S03: () => `${top(2, true)}<div class="ps-ttl">학교 정보를<br>알려주세요</div>${field("학교", "전남대학교", { icon: `<span class="ps-fi">${IC.search}</span>` })}<div class="ps-segs" aria-label="학년">${[1, 2, 3, 4].map(n => `<span class="${n === 2 ? "on" : ""}">${n}학년</span>`).join("")}</div>${field("전공", "", { ph: "전공을 입력하세요", typing: true })}`,
+    S04: () => `${top(3, true)}<div class="ps-ttl">관심분야를<br>5개 골라주세요</div><div class="ps-cnt"><b>3</b>/5 선택</div><div class="chips">${[["공부", 1], ["운동", 1], ["여행", 0], ["동아리", 1], ["알바", 0], ["독서", 0], ["취업", 0]].map(([t, on]) => `<span class="${on ? "on" : ""}">${on ? IC.check : ""}${t}</span>`).join("")}</div>`,
+    S05: () => `<div class="ps-hm"><div><small>11월 16일 수요일</small><b>오늘 할 일 3개</b></div><i class="ps-av">민</i></div>${day(["월", "화", "수", "목", "금", "토"], 2)}
+      <div class="ps-sec">우선순위 추천</div>${[["c1", "자료구조 과제", "오늘 23:59", "1순위"], ["c2", "동아리 회의", "18:00", ""], ["c3", "토익 단어 30개", "10분", "추천"]].map(([c, t, m, tag]) => `<div class="todo ${c}"><div><b>${t}</b><small>${m}</small></div>${tag ? `<em>${tag}</em>` : ""}</div>`).join("")}
+      <div class="ps-tabs">${[IC.home, IC.cal, IC.plus, IC.user].map((ic, i) => `<span class="${i === 0 ? "on" : ""}${i === 2 ? " ps-add" : ""}">${ic}</span>`).join("")}</div>`,
+  };
+  // 화면 아래 주 버튼. 뒤로·건너뛰기는 위쪽 바에 있다.
   const PRIMARY = { S01: "시작하기", S02: "다음", S03: "다음", S04: "완료" };
 
   function phoneScreen(slot) {
-    if (!slot || !slot.screen) return `<div class="stbar"><span>9:41</span><span class="isl"></span><span>●●</span></div><div class="idle">다음 사람을<br>기다리는 중</div>`;
-    const sid = slot.screen, st = slot.status;
-    const label = slot.target || PRIMARY[sid];
-    let cta = "";
-    if (st === "run" && label) cta = `<div class="cta${slot.tapping ? " tapping" : ""}">${label}<i class="tap"></i></div>`;
-    const flag = st === "drop" ? `<div class="flag drop"><b>그만둠</b><span>${PL.DROP[slot.reason] || ""}</span></div>` : st === "done" ? `<div class="flag done"><b>목표 도착</b><span>회원가입 완료</span></div>` : "";
-    return `<div class="stbar"><span>9:41</span><span class="isl"></span><span>●●</span></div><div class="app">${SCREEN_BODY[sid]()}</div>${cta}${flag}<div class="glare"></div>`;
+    if (!slot || !slot.screen) return `${SB}<div class="idle"><i class="ps-spin"></i>다음 사람을<br>기다리는 중</div>`;
+    const sid = slot.screen, st = slot.status, label = st === "run" ? (slot.target || PRIMARY[sid]) : null;
+    const foot = PRIMARY[sid] ? `<div class="cta"><span class="ps-pri" data-b="${PRIMARY[sid]}">${PRIMARY[sid]}</span></div>` : "";
+    let html = `${SB}<div class="app">${SCREEN_BODY[sid]()}</div>${foot}`;
+    // 지금 누르는 버튼(주 버튼·뒤로·건너뛰기)에 누르는 표시를 붙인다
+    if (label) html = html.replace(new RegExp(`class="([^"]*)" data-b="${label}">`), (m, c) => `class="${c} hit" data-b="${label}"><i class="tap"></i>`);
+    if (st === "drop") html += `<div class="ps-scrim"></div><div class="flag drop"><span class="ps-fx">!</span><b>여기서 그만둠</b><span>${PL.DROP[slot.reason] || ""}</span></div>`;
+    if (st === "done") html += `<div class="ps-scrim light"></div><div class="flag done"><span class="ps-fx">${IC.check}</span><b>회원가입 완료</b><span>목표 화면에 도착</span></div>`;
+    return html + `<div class="glare"></div>`;
   }
 
   class Orbit {
@@ -57,6 +77,9 @@
         d.style.setProperty("--op", (this.o.minop + (1 - this.o.minop) * (c + 1) / 2).toFixed(2));
         d.style.setProperty("--shade", (0.55 + 0.45 * s).toFixed(2));
         d.style.zIndex = Math.round(c * 100) + 100;
+        // 뒤로 돈 휴대폰의 이름표는 카메라 쪽으로 돌려 좌우가 뒤집혀 보이지 않게 한다
+        const pid = d.querySelector(".o-pid"), back = c < 0;
+        if (pid.dataset.back !== String(back)) { pid.dataset.back = back; pid.style.transform = `translateY(${this.o.H / 2 + 34}px) translateZ(${back ? -this.o.D : this.o.D}px)${back ? " rotateY(180deg)" : ""}`; }
       });
     }
     set(i, slot) {

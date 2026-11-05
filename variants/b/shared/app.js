@@ -30,13 +30,25 @@
     window.scrollTo(0, 0);
   }
   addEventListener("hashchange", render);
+  // 본문 건너뛰기: 해시 라우팅이라 href="#..." 대신 버튼으로 화면 제목에 포커스를 옮긴다
+  document.body.insertAdjacentHTML("afterbegin", `<button type="button" class="skip">본문으로 건너뛰기</button>`);
+  document.querySelector(".skip").addEventListener("click", () => {
+    const app = document.getElementById("app"), t = app.querySelector("main h1, main h2") || app.querySelector("main");
+    if (!t) return;
+    if (!t.hasAttribute("tabindex")) t.setAttribute("tabindex", "-1");
+    t.focus();
+  });
 
   // ---------- 공통 조각 ----------
   const seg = (key, cls = "seg") => `<div class="set" data-key="${key}"><div class="set-label">${PL.OPTION_LABELS[key]}</div><div class="${cls}" role="radiogroup" aria-label="${PL.OPTION_LABELS[key]}">` +
     PL.OPTIONS[key].map(([v, l]) => `<button type="button" role="radio" aria-checked="${String(S.panel[key]) === String(v)}" data-val="${v}">${l}</button>`).join("") + `</div></div>`;
   const steps = active => `<ol class="steps">${STEPS.map(([r, l]) => `<li class="${r === active ? "on" : ""}"><a href="#/${r}">${l}</a></li>`).join("")}</ol>`;
   const facts = p => [["가격 민감도", "price"], ["앱 이용 빈도", "app"], ["디지털 수용도", "digital"], ["개인정보 우려", "privacy"]]
-    .map(([l, k]) => ({ label: l, key: k, v: p[k], top: 100 - PL.percentile(personas(), k, p[k]) }));
+    .map(([l, k]) => {
+      // top: 이 사람보다 값이 크거나 같은 비율. 절반을 넘으면 '하위'로 바꿔 방향이 헷갈리지 않게 한다.
+      const top = 100 - PL.percentile(personas(), k, p[k]);
+      return { label: l, key: k, v: p[k], top, rank: top <= 50 ? `상위 ${top}%` : `하위 ${100 - top}%` };
+    });
   const who = p => `${p.age}세 · ${p.gender} · ${p.occupation === "student" ? "대학생" : "직장인"} · ${p.region}`;
   const profileLine = p => {
     const bits = [];
@@ -60,6 +72,18 @@
       root.querySelectorAll(".set").forEach(set => set.querySelectorAll("button").forEach(b => b.setAttribute("aria-checked", String(S.panel[set.dataset.key]) === b.dataset.val)));
       root.querySelectorAll("[data-slot=chart] [data-id]").forEach(n => { n.style.cursor = "pointer"; n.addEventListener("click", () => { sel = n.dataset.id; S.sel = sel; save(); draw(); }); });
     };
+    // 키보드: 그래프에 포커스를 두고 방향키로 가격 민감도 순서대로 사람을 바꾼다
+    const chartEl = root.querySelector("[data-slot=chart]");
+    chartEl.tabIndex = 0;
+    chartEl.setAttribute("role", "group");
+    chartEl.setAttribute("aria-label", "페르소나 분포 그래프. 방향키로 사람을 바꾸고, 오른쪽에서 그 사람을 봅니다.");
+    chartEl.addEventListener("keydown", e => {
+      const order = [...personas()].sort((a, b) => a.price - b.price || a.app - b.app), i = order.findIndex(p => p.id === sel);
+      const j = { ArrowRight: i + 1, ArrowDown: i + 1, ArrowLeft: i - 1, ArrowUp: i - 1, Home: 0, End: order.length - 1 }[e.key];
+      if (j === undefined) return;
+      e.preventDefault();
+      sel = order[Math.max(0, Math.min(order.length - 1, j))].id; S.sel = sel; save(); draw();
+    });
     root.querySelectorAll(".set").forEach(set => set.addEventListener("click", e => {
       const b = e.target.closest("button"); if (!b) return;
       const k = set.dataset.key, v = b.dataset.val; S.panel[k] = k === "count" ? Number(v) : v; S.ran = false; save(); draw();
@@ -70,9 +94,14 @@
   function distNote(ps) {
     const d = PL.distribution(ps, "price", S.panel.price, "price"), max = Math.max(...d.map(x => Math.abs(x.pct - x.target)));
     const line = d.map(x => `${x.label} ${x.count}명`).join(" · ");
-    return S.panel.price === "all"
-      ? `가격 민감도 목표 20·50·30% 대비 ${line}. ${max <= 8 ? "목표와 가까워 그대로 진행해도 됩니다." : `목표와 ${max}%p 차이가 납니다. 다시 뽑아보세요.`}`
+    const price = S.panel.price === "all"
+      ? `가격 민감도 목표 20·50·30% 대비 ${line}. ${max <= 8 ? "목표와 가깝습니다." : `목표와 ${max}%p 차이가 납니다.`}`
       : `가격 민감도를 '${PL.BAND_LABEL[S.panel.price]}'으로 고정했습니다. ${line}.`;
+    // 앱 이용 빈도도 공개 분포에 맞춰 층화 샘플링하므로 가격 민감도와 같은 방식으로 점검한다
+    const a = PL.distribution(ps, "app", "all", "app"), aMax = Math.max(...a.map(x => Math.abs(x.pct - x.target)));
+    const aLine = a.map(x => `${x.label} ${x.count}명`).join(" · ");
+    const app = `앱 이용 빈도 목표 15·55·30% 대비 ${aLine}. ${aMax <= 8 ? "목표와 가까워 그대로 진행해도 됩니다." : `목표와 ${aMax}%p 차이가 납니다. 다시 뽑아보세요.`}`;
+    return `${price} ${app}`;
   }
 
   // ---------- 실행 화면 공통 동작 ----------
@@ -82,6 +111,8 @@
     const setK = (k, v) => q(k).forEach(e => e.textContent = v);
     const orbit = new Orbit(root.querySelector("[data-slot=orbit]"), Object.assign({ onPick: pid => focus(pid) }, o.orbit));
     const log = root.querySelector("[data-slot=log]");
+    // 스크롤되는 기록은 키보드로도 들어가 읽을 수 있게 한다 (새 줄마다 읽어주지는 않음)
+    if (log) { log.tabIndex = 0; log.setAttribute("role", "log"); log.setAttribute("aria-live", "off"); log.setAttribute("aria-label", "실시간 기록"); }
     const focusEl = root.querySelector("[data-slot=focus]");
     let focusId = null;
     function focus(pid) {
@@ -116,8 +147,10 @@
     const rep = report(), rs = results(), ps = personas();
     const maxR = Math.max(...rep.aiReasons.map(x => x[1] / rep.n), ...rep.realReasons.map(x => x[1] / rep.realN), 0.01);
     const reasonKeys = [...new Set([...rep.aiReasons.map(x => x[0]), ...rep.realReasons.map(x => x[0])])].slice(0, 5);
-    const pctOf = (list, k, tot) => Math.round(((list.find(x => x[0] === k) || [0, 0])[1]) / tot * 100);
-    const reasons = `<div class="reasons">${reasonKeys.map(k => { const a = pctOf(rep.aiReasons, k, rep.n), r = pctOf(rep.realReasons, k, rep.realN); return `<button type="button" class="reason" data-reason="${k}"><span class="r-name">${PL.DROP[k]}</span><span class="r-bars"><i class="r-ai" style="width:${a / maxR}%"></i><i class="r-real" style="width:${r / maxR}%"></i></span><span class="r-num">AI ${a}% · 실제 ${r}%</span></button>`; }).join("")}</div>`;
+    const cntOf = (list, k) => (list.find(x => x[0] === k) || [0, 0])[1];
+    const pctOf = (list, k, tot) => Math.round(cntOf(list, k) / tot * 100);
+    // 실제 참가자는 12~15명뿐이라 비율보다 사람 수로 적는다 (기획서 4-7: 비율이 아니라 순위를 본다)
+    const reasons = `<div class="reasons">${reasonKeys.map(k => { const a = pctOf(rep.aiReasons, k, rep.n), r = pctOf(rep.realReasons, k, rep.realN); return `<button type="button" class="reason" data-reason="${k}"><span class="r-name">${PL.DROP[k]}</span><span class="r-bars"><i class="r-ai" style="width:${a / maxR}%"></i><i class="r-real" style="width:${r / maxR}%"></i></span><span class="r-num">AI ${cntOf(rep.aiReasons, k)}/${rep.n}명 · 실제 ${cntOf(rep.realReasons, k)}/${rep.realN}명</span></button>`; }).join("")}</div>`;
     const G = { yesDone: "쓰겠다 · 끝까지 감", yesDrop: "쓰겠다 · 중간에 그만둠", noDone: "망설임 · 끝까지 감", noDrop: "망설임 · 그만둠" };
     const gOf = id => Object.keys(rep.groups).find(k => rep.groups[k].includes(id));
     const grid = `<div class="grid100" role="list" aria-label="AI 패널 ${rep.n}명">${rs.map(r => `<button type="button" role="listitem" class="cell g-${gOf(r.id)}" data-id="${r.id}" data-reason="${r.act.end.reason || ""}" data-screen="${r.act.end.result === "drop" ? r.act.end.screen : ""}" title="${r.id}"></button>`).join("")}</div>
@@ -130,8 +163,11 @@
         <div><div class="pp-k">행동 · 프로토타입에서</div><div class="pp-v">${r.act.end.result === "complete" ? "끝까지 감" : `${r.act.end.screen}에서 그만둠`}</div><div class="pp-path">${path}</div>${r.act.end.result === "drop" ? `<p>${esc((r.act.steps.at(-1) || {}).quote || "")}</p><div class="pp-ai">AI 응답 · ${PL.DROP[r.act.end.reason]}</div>` : ""}</div></div></div>`;
     };
     const gapLine = `‘쓰겠다’고 답한 ${rep.saidYes}명 중 ${rep.groups.yesDrop.length}명이 끝까지 가지 못했습니다.`;
+    const gapText = rep.gap < 0 ? `AI가 실제보다 ${-rep.gap}%p 낮게 예측했습니다.` : rep.gap > 0 ? `AI가 실제보다 ${rep.gap}%p 낙관적으로 예측했습니다.` : "AI 예측과 실제가 같았습니다.";
+    // 결과 숫자 바로 옆에 붙이는 신뢰도 요약 (기획서 4-9, 계획서 5-3)
+    const trust = [["완료율", rep.gap < 0 ? `AI가 ${-rep.gap}%p 낮게 예측` : rep.gap > 0 ? `AI가 ${rep.gap}%p 낙관적` : "AI와 실제가 같음"], ["가장 많이 그만둔 화면", rep.topScreenMatch ? "AI와 실제 일치" : "AI와 실제가 다름"], ["그만둔 이유 상위 3개", `${rep.reasonOverlap}/3 겹침`]];
     const calib = `<div class="calib"><div class="c-row"><span>완료율</span><b>AI ${rep.aiRate}% · 실제 ${rep.realRate}%</b></div>
-      <p>${rep.gap < 0 ? `AI가 실제보다 ${-rep.gap}%p 낮게 예측했습니다.` : rep.gap > 0 ? `AI가 실제보다 ${rep.gap}%p 낙관적으로 예측했습니다.` : "AI 예측과 실제가 같았습니다."} 완료율 숫자는 참고로만 보세요.</p>
+      <p>${gapText} 완료율 숫자는 참고로만 보세요.</p>
       <div class="c-row"><span>가장 많이 그만둔 화면</span><b>${rep.topScreenMatch ? "AI와 실제 일치" : "AI와 실제가 다름"}</b></div>
       <div class="c-row"><span>그만둔 이유 상위 3개</span><b>${rep.reasonOverlap}/3 겹침</b></div><div class="c-note">실제 참가자 ${rep.realN}명 기준 · 예시 데이터</div></div>`;
     const ask = `<div class="askr"><div class="a-row"><span>평균 사용 의향</span><b>${rep.avgIntent} / 5</b></div><div class="a-row"><span>지불 의향 중앙값</span><b>월 ${rep.median.toLocaleString()}원</b></div>
@@ -139,7 +175,7 @@
     const invite = `<div class="invite"><p>같은 프로토타입과 과제를 실제 사람에게도 시켜 AI 예측의 오차를 잽니다. 링크를 받은 사람은 로그인 없이 참여합니다.</p>
       <div class="inv-row"><code data-slot="invlink">${S.invited ? location.href.split("#")[0] + "#/p/demo" : "아직 만든 링크가 없습니다"}</code><button type="button" data-act="invite">${S.invited ? "링크 복사" : "참가 링크 만들기"}</button></div>
       <div class="c-note">참여 ${rep.realN}/15명 · 예시 데이터 · <a href="#/p/demo">참가자 화면 미리보기</a></div></div>`;
-    return { rep, reasons, grid, person, gapLine, calib, ask, invite, funnel: CH.funnel(rep), firstId: rep.groups.yesDrop[0] || rs[0].id };
+    return { rep, reasons, grid, person, gapLine, gapText, trust, calib, ask, invite, funnel: CH.funnel(rep, CH.narrow() ? { w: 380 } : {}), firstId: rep.groups.yesDrop[0] || rs[0].id };
   }
   function mountReport(root) {
     const parts = reportParts();
@@ -152,7 +188,12 @@
       if (on) btn.classList.add("on");
     };
     root.querySelectorAll(".reason").forEach(b => b.addEventListener("click", () => lit("reason", b.dataset.reason, b)));
-    root.querySelectorAll(".frow").forEach(b => { b.style.cursor = "pointer"; b.addEventListener("click", () => lit("screen", b.dataset.screen, b)); });
+    root.querySelectorAll(".frow").forEach(b => {
+      b.style.cursor = "pointer";
+      const act = () => { lit("screen", b.dataset.screen, b); root.querySelectorAll(".frow").forEach(x => x.setAttribute("aria-pressed", x.classList.contains("on"))); };
+      b.addEventListener("click", act);
+      b.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); act(); } });
+    });
     root.querySelectorAll("[data-act=invite]").forEach(b => b.addEventListener("click", () => {
       const url = location.href.split("#")[0] + "#/p/demo";
       if (!S.invited) { S.invited = 1; save(); root.querySelector("[data-slot=invlink]").textContent = url; b.textContent = "링크 복사"; return; }
@@ -228,7 +269,7 @@
         <label class="field">과제<input name="task" value="${esc(s.task)}"></label>
         <label class="field">목표 화면<select name="goal">${s.screens.map(x => `<option value="${x.id}" ${x.id === s.goal ? "selected" : ""}>${x.id} ${x.label}</option>`).join("")}</select></label>
         <p class="path-ok" data-slot="path"></p><p class="hint">과제 문장과 이탈 이유 8가지는 AI와 실제 참가자에게 똑같이 쓰입니다.</p></section>
-      <section class="pane frames-pane"><h2>인식한 화면 ${s.screens.length}개</h2><div class="frames">${s.screens.map(x => `<div class="frame ${x.id === s.goal ? "goal" : ""}"><div class="mini">${phoneScreen({ screen: x.id, status: x.id === s.goal ? "idle" : "run", target: x.buttons[0] && x.buttons[0][0] })}</div><b>${x.id} ${x.label}</b><span>${x.buttons.map(b => `[${b[0]}] → ${b[1]}`).join("<br>") || "마지막 화면"}</span></div>`).join("")}</div></section></div>
+      <section class="pane frames-pane"><h2>인식한 화면 ${s.screens.length}개</h2><div class="frames">${s.screens.map(x => `<div class="frame ${x.id === s.goal ? "goal" : ""}"><div class="mini"><div class="o-scr">${phoneScreen({ screen: x.id, status: x.id === s.goal ? "idle" : "run", target: x.buttons[0] && x.buttons[0][0] })}</div></div><b>${x.id} ${x.label}</b><span>${x.buttons.map(b => `[${b[0]}] → ${b[1]}`).join("<br>") || "마지막 화면"}</span></div>`).join("")}</div></section></div>
       <footer class="setup-foot"><button class="btn-ghost" data-go="new/product">이전: 제품 기획</button><span class="save-state">자동 저장됨</span><button class="btn-primary" data-act="next">다음: AI 패널</button></footer></main>`,
     mount: root => {
       const path = root.querySelector("[data-slot=path]"), msg = root.querySelector("[data-slot=msg]");

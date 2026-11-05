@@ -1,10 +1,12 @@
 // 분포 시각화 3종 + 보조 차트. 색은 CSS 변수로 받아 시안별 테마를 따른다.
 (function (g) {
   const fmt = n => Number(n).toFixed(2);
+  // 좁은 화면에서는 viewBox를 줄여 그린다. 넓게 그린 SVG를 줄이면 글자가 5~6px까지 작아진다.
+  const narrow = () => (window.innerWidth || 1440) < 700;
 
   // A: 가격 민감도 × 앱 이용 빈도 산점도 + 목표/표본 분포 막대
   function scatter(personas, selId, panel, opt = {}) {
-    const W = opt.w || 620, H = opt.h || 440, x0 = 48, y0 = 14, x1 = W - 96, y1 = H - 64;
+    const W = opt.w || 620, H = opt.h || 450, x0 = 48, y0 = 34, x1 = W - 96, y1 = H - 70;
     const X = v => x0 + v * (x1 - x0), Y = v => y1 - v * (y1 - y0);
     const dPrice = PL.distribution(personas, "price", panel.price, "price");
     const dApp = PL.distribution(personas, "app", "all", "app");
@@ -22,14 +24,14 @@
       const w = X(c) - X(a) - 10, d = dPrice[i];
       s += `<rect class="bar-target" x="${X(a) + 5}" y="${y1 + 14}" width="${(w * d.target / 60).toFixed(1)}" height="7"/>`;
       s += `<rect class="bar-sample" x="${X(a) + 5}" y="${y1 + 24}" width="${(w * d.pct / 60).toFixed(1)}" height="7"/>`;
-      s += `<text class="tick" x="${X(a) + 5}" y="${y1 + 48}">${d.label} ${d.count}명 · 목표 ${d.target}</text>`;
+      s += `<text class="tick strong" x="${X(a) + 5}" y="${y1 + 46}">${d.label} ${d.count}명</text><text class="tick" x="${X(a) + 5}" y="${y1 + 61}">목표 ${d.target}%</text>`;
       const hh = Y(a) - Y(c) - 10, e = dApp[i];
       s += `<rect class="bar-target" x="${x1 + 14}" y="${Y(c) + 5}" width="7" height="${(hh * e.target / 60).toFixed(1)}"/>`;
       s += `<rect class="bar-sample" x="${x1 + 24}" y="${Y(c) + 5}" width="7" height="${(hh * e.pct / 60).toFixed(1)}"/>`;
       s += `<text class="tick" x="${x1 + 38}" y="${Y(c) + 16}">${e.label}</text><text class="tick strong" x="${x1 + 38}" y="${Y(c) + 31}">${e.count}명</text>`;
     });
     s += `<text class="axis-label" x="${x1}" y="${y1 - 8}" text-anchor="end">가격 민감도 →</text>`;
-    s += `<text class="axis-label" x="${x0 - 14}" y="${y0 + 4}" text-anchor="end" transform="rotate(-90 ${x0 - 14} ${y0 + 4})">앱 이용 빈도 →</text></svg>`;
+    s += `<text class="axis-label" x="${x0 - 6}" y="${y0 - 14}">↑ 앱 이용 빈도</text></svg>`;
     return s;
   }
 
@@ -73,19 +75,21 @@
     return s;
   }
 
-  // 퍼널: AI와 실제 겹침 막대
+  // 퍼널: AI와 실제 겹침 막대. 실제 참가자는 사람 수로 적는다. 행은 키보드로도 누를 수 있다.
   function funnel(rep, opt = {}) {
-    const W = opt.w || 640, rowH = opt.rowH || 44, H = rep.funnel.length * rowH + 30, lw = 120, bw = W - lw - 120;
-    let s = `<svg class="chart funnel" viewBox="0 0 ${W} ${H}" role="img" aria-label="화면별 남은 비율">`;
+    const W = opt.w || 640, rowH = opt.rowH || 46, H = rep.funnel.length * rowH + 20, lw = W < 500 ? 104 : 120, rw = W < 500 ? 92 : 120, bw = W - lw - rw;
+    let s = `<svg class="chart funnel" viewBox="0 0 ${W} ${H}" role="group" aria-label="화면별 남은 사람. 행을 누르면 그 화면에서 그만둔 사람만 표시합니다.">`;
     rep.funnel.forEach((f, i) => {
       const y = 10 + i * rowH;
-      s += `<g class="frow" data-screen="${f.id}"><text class="tick strong" x="0" y="${y + 17}">${f.id} ${f.label}</text>`;
+      s += `<g class="frow" data-screen="${f.id}" tabindex="0" role="button" aria-pressed="false" aria-label="${f.id} ${f.label}: AI ${f.aiPct}% 남음, 실제 ${f.real}/${rep.realN}명 남음">`;
+      s += `<rect class="f-hit" x="-4" y="${y - 2}" width="${W + 4}" height="${rowH - 6}" rx="2"/>`;
+      s += `<text class="tick strong" x="0" y="${y + 17}">${f.id} ${f.label}</text>`;
       s += `<rect class="f-ai" x="${lw}" y="${y + 4}" width="${(bw * f.aiPct / 100).toFixed(1)}" height="14"/>`;
       s += `<rect class="f-real" x="${lw}" y="${y + 21}" width="${(bw * f.realPct / 100).toFixed(1)}" height="8"/>`;
-      s += `<text class="tick" x="${lw + bw + 12}" y="${y + 16}">AI ${f.aiPct}%</text><text class="tick dim" x="${lw + bw + 12}" y="${y + 31}">실제 ${f.realPct}%</text></g>`;
+      s += `<text class="tick" x="${lw + bw + 10}" y="${y + 16}">AI ${f.aiPct}%</text><text class="tick dim" x="${lw + bw + 10}" y="${y + 31}">실제 ${f.real}/${rep.realN}명</text></g>`;
     });
     return s + "</svg>";
   }
 
-  g.CH = { scatter, parallel, swarm, funnel, fmt };
+  g.CH = { scatter, parallel, swarm, funnel, fmt, narrow };
 })(window);

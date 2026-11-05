@@ -1,4 +1,4 @@
-/* 시안 B · 스튜디오 — 차가운 스톤, 위에서 내리는 조명, 둥근 재질 패널, 짙은 초록 하나 */
+/* 시안 B · 스튜디오 — 따뜻한 스톤 바탕, 위에서 내리는 조명, 둥근 재질 패널, 레드 오렌지 주색과 옐로 펑크 포인트 */
 :root{--bg:#F7F5F2;--surface:#FFFFFF;--ink:#24130D;--sub:#6E5F58;--line:#E6DED8;--accent:#D63F17;--ro:#F0502A;--punk:#FFE135;--drop:#D63F17;--done:#24130D;--ai:#24130D;--real:#F2A48C;--radius:12px;--font:"IBM Plex Sans KR","Pretendard Variable",Pretendard,system-ui,sans-serif;--phone-body:linear-gradient(160deg,#3a3532,#151210);
 --lift:0 1px 0 rgba(255,255,255,.75) inset,0 16px 34px -20px rgba(70,32,18,.5)}
 html{background:#ECE8E4}body{background:radial-gradient(ellipse 1100px 640px at 50% 0%,#FFFFFF,var(--bg) 70%,#ECE8E4) no-repeat,#ECE8E4}
@@ -90,3 +90,9 @@ body:after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.05;bac
 .s-line .g{color:var(--ink);background:linear-gradient(transparent 60%,var(--punk) 60%);padding:0 4px}
 .prog em{background:var(--ro)}.lg-done{background:var(--ink)}
 .o-pid.done{color:var(--ink);background:var(--punk)}
+
+/* ---------- 2026-11-04 대비 보정 ---------- */
+/* 레드 오렌지 카드 위 라벨: 반투명 잉크 3.4:1 → 잉크 5.0:1 */
+.cmp-card.strong .k{color:var(--ink)}
+/* 참가 링크 버튼: 스노위 화이트 4.21:1 → 흰색 4.58:1 */
+.inv-row button{color:#fff}

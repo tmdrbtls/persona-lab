@@ -73,3 +73,25 @@
 .chart .dot{fill:var(--ink);fill-opacity:.7}.traits span{border-color:var(--sky-strong);color:var(--sky-strong)}
 .o-plate{border-color:var(--sky-strong);background:radial-gradient(circle,rgba(159,205,239,.32),rgba(159,205,239,0) 70%)}
 .ctl button{border-color:var(--sky-strong)}.to-report.ready{background:var(--accent)}
+
+/* ---------- 2026-11-04 평가 반영 ---------- */
+/* 대비: 앰버 레드 글자는 한 단계 어둡게(3.95→4.87:1), 완료 버튼도 흰 글자 4.5:1 이상 */
+.pos b{color:var(--drop)}.to-report.ready{background:var(--drop)}
+/* 신뢰도 요약: 세 숫자 바로 아래 */
+.trust{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 28px;padding:12px 0 14px;border-top:1px solid var(--line);font-size:14px}
+.trust .t-k{font-size:12px;color:var(--sub);flex-basis:100%}
+.trust div{display:flex;gap:8px;align-items:baseline}.trust div span{color:var(--sub)}.trust b{font-weight:700}
+.trust .t-more{margin-left:auto;font-size:13px;font-weight:700;color:var(--sky-strong);text-underline-offset:3px}
+.kpi b{font-variant-numeric:tabular-nums}
+@media (max-width:1100px){
+  /* 실행: 궤도를 먼저, 숫자는 그 아래 한 줄 요약 */
+  .r-stage{order:-1}.focus{margin-top:8px}
+  .r-left{display:grid;grid-template-columns:repeat(3,1fr);column-gap:14px}.r-left>*{grid-column:1/-1}.r-left>.big{grid-column:auto}
+  .big b{font-size:44px}.big b small{font-size:16px}
+}
+@media (max-width:860px){
+  .rp-head{flex-direction:column;align-items:flex-start;gap:14px}
+  .kpi{padding:14px 0}.kpi b{font-size:56px}
+  .trust{flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:6px}.trust .t-k{flex-basis:auto}.trust div{justify-content:space-between;width:100%}.trust .t-more{margin-left:0}
+  .orbit-box{height:400px;margin-top:0}
+}

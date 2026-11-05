@@ -83,12 +83,14 @@
   function generatePersonas(panel) {
     const r = rng(hash(JSON.stringify(panel)));
     const qp = quota(r, panel.count, panel.price, "price"), qv = quota(r, panel.count, panel.privacy, "privacy");
+    // 앱 이용 빈도도 가격·개인정보처럼 공개 분포(15·55·30%)에 맞춰 층화 샘플링한다 (선택 항목이 없어 늘 '전체')
+    const qa = quota(r, panel.count, "all", "app");
     const [aLo, aHi] = panel.age.split("-").map(Number);
     return Array.from({ length: panel.count }, (_, i) => {
       const occupation = panel.occupation === "all" ? (r() < 0.6 ? "student" : "worker") : panel.occupation;
       const price = inBand(r, qp[i]);
       const privacy = inBand(r, qv[i]);
-      const app = round2(bell(r, occupation === "student" ? 0.66 : 0.55, 0.5));
+      const app = inBand(r, qa[i]);
       const digital = round2(bell(r, 0.62, 0.55));
       const tool = pickWeighted(r, TOOL_MIX);
       const age = aLo + Math.floor(r() * (aHi - aLo + 1));
