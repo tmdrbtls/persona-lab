@@ -1,6 +1,9 @@
 // 시안 A · 정밀 — 스위스 타이포그래피. 선과 여백으로만 나누고, 큰 숫자가 위계를 만든다.
 (function () {
-  const { V, S, esc, seg, steps, facts, who, profileLine, personas, report, mountPanel, mountRun, reportParts, mountReport } = APP;
+  const { V, S, esc, seg, steps, facts, who, profileLine, personas, report, mountPanel, mountRun, reportParts, mountReport, save, compareOff, groupChips, panelSummary } = APP;
+  // 시안 A는 그룹 비교를 기본으로 보여준다: 범위는 넓게(소속 전체, 20~40대), 연령끼리 비교, 그룹당 30명.
+  // 데모 기본 표본(seed 2)은 그룹 차이가 드러나는 예시로 골랐다. '패널 다시 뽑기'를 누르면 바뀐다.
+  if (!S.panelV2) { Object.assign(S.panel, { occupation: "all", age: "20-49", price: "all", privacy: "all", compare: "age", minPer: 30, seed: 2 }); S.panelV2 = 1; S.ran = false; save(); }
   const NAV = [["", "소개"], ["tests", "내 테스트"], ["new/product", "새 테스트"]];
   V.nav = active => `<header class="nav"><a class="brand" href="#/">personalab</a><nav>${NAV.map(([r, l]) => `<a href="#/${r}" class="${(active === "tests" && r === "tests") || (active === "setup" && r === "new/product") ? "on" : ""}">${l}</a>`).join("")}</nav><a class="nav-cta" href="#/login">로그인</a></header>`;
 
@@ -28,15 +31,23 @@
 
   V.panel = {
     html: s => `<main class="v-setup v-panel">${V.nav("setup")}${steps("new/panel")}<div class="panel3">
-      <section class="p-left"><h1>누구에게<br>써보게 할까요</h1><p class="sub">한 명씩 만들지 않고 분포를 고릅니다.</p>${["count", "occupation", "age", "price", "privacy"].map(k => seg(k)).join("")}
+      <section class="p-left"><h1>누구에게<br>써보게 할까요</h1><p class="sub">한 명씩 만들지 않고 분포를 고릅니다.</p>
+        <div class="p-q"><b>① 누구를 넣을까</b><span>우리 앱과 상관없는 사람만 빼세요.</span></div>${["occupation", "age", "price", "privacy"].map(k => seg(k)).join("")}
+        <div class="p-q"><b>② 무엇끼리 비교할까</b><span>고른 기준의 그룹마다 최소 인원을 채워 뽑습니다. 결과에서 그룹별로 어디서 그만뒀는지 봅니다.</span></div>${seg("compare", "seg", compareOff())}
+        ${PL.compareGroups(s.panel).ok ? seg("minPer") : seg("count")}
+        <p class="why" data-slot="why" aria-live="polite">${s.panel.compare !== "none" && !PL.compareGroups(s.panel).ok ? esc(PL.compareGroups(s.panel).why) + " 지금은 비교 없이 뽑습니다." : ""}</p>
         <button class="redo" data-act="redraw">패널 다시 뽑기</button><p class="hint">NVIDIA 한국인 페르소나에 한국미디어패널의 소비 습관을 짝지어 뽑습니다. 학습이 아니라 샘플링입니다.</p></section>
-      <section class="p-mid"><h2><span data-slot="count"></span>명이 이렇게 퍼져 있습니다</h2><p class="sub">점 하나가 한 사람입니다. 점을 누르거나 그래프를 선택하고 방향키를 누르면 오른쪽에 그 사람이 나옵니다. 축 바깥 막대는 목표 분포(연한 막대)와 실제로 뽑힌 분포(진한 막대)입니다.</p>
-        <div data-slot="chart" class="chart-box"></div><p class="check" data-slot="check"></p></section>
+      <section class="p-mid"><h2><span data-slot="count"></span>명이 이렇게 퍼져 있습니다</h2>
+        <div class="p-chips" data-slot="check" aria-live="polite"></div>
+        <p class="sub">점 하나가 한 사람${PL.compareGroups(s.panel).ok ? "이고 색은 그룹입니다" : "입니다"}. 점을 누르거나 그래프를 선택하고 방향키를 누르면 오른쪽에 그 사람이 나옵니다. 축 바깥 막대는 목표 분포(연한 막대)와 실제로 뽑힌 분포(진한 막대)입니다.</p>
+        <div data-slot="chart" class="chart-box"></div></section>
       <section class="p-right" data-slot="side" aria-live="polite"></section></div>
-      <footer class="setup-foot"><button class="btn-ghost" data-go="new/prototype">이전: 프로토타입</button><span class="save-state">자동 저장됨</span><button class="btn-primary" data-go="run">이 패널로 실행하기</button></footer></main>`,
+      <footer class="setup-foot"><button class="btn-ghost" data-go="new/prototype">이전: 프로토타입</button><span class="save-state summary" data-slot="summary"></span><button class="btn-primary" data-go="run">이 패널로 실행하기</button></footer></main>`,
     mount: root => mountPanel(root, {
-      chart: (ps, sel, panel) => CH.scatter(ps, sel, panel, CH.narrow() ? { w: 380, h: 420 } : {}),
-      side: p => `<div class="pid-big">${p.id}</div><div class="who">${who(p)}</div><div class="tool">지금 쓰는 도구 · ${PL.TOOLS[p.tool]}</div>
+      rerender: ["compare", "occupation", "age", "price"],
+      check: ps => groupChips(ps),
+      chart: (ps, sel, panel) => { const cg = PL.compareGroups(panel), gi = cg.ok ? Object.fromEntries(cg.groups.map((g, i) => [g.key, i])) : null; return CH.scatter(ps, sel, panel, Object.assign(CH.narrow() ? { w: 380, h: 420 } : {}, { groupIdx: gi })); },
+      side: p => `<div class="pid-big">${p.id}</div>${p.grp ? `<div class="grp-tag">${(PL.compareGroups(S.panel).groups.find(g => g.key === p.grp) || {}).label || ""} 그룹</div>` : ""}<div class="who">${who(p)}</div><div class="tool">지금 쓰는 도구 · ${PL.TOOLS[p.tool]}</div>
         ${facts(p).map(f => `<div class="fact"><span>${f.label}</span><i><em style="width:${f.v * 100}%"></em></i><b>${f.v.toFixed(2)}</b></div>`).join("")}
         <p class="pos">가격 민감도는 이 패널에서 <b>${facts(p)[0].rank}</b>, 앱 이용 빈도는 ${facts(p)[1].rank}입니다.</p>
         <div class="profile"><span>이 사람이 AI에게 전달되는 방식</span><p>${profileLine(p)}</p></div>
@@ -73,6 +84,8 @@
         <div class="trust" aria-label="이 결과를 얼마나 믿을까"><span class="t-k">실제 참가자 ${rep.realN}명과 비교</span>${P.trust.map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join("")}<a href="#trust" class="t-more" data-jump="trust">자세히</a></div></section>
       <section class="rp-row"><div class="rp-funnel"><h2>화면별로 남은 사람</h2><p class="sub">행을 누르면 그 화면에서 그만둔 사람이 아래 표에 표시됩니다.</p>${P.funnel}</div>
         <div class="rp-reasons"><h2>그만둔 이유</h2><p class="sub">굵은 막대 AI, 가는 막대 실제</p>${P.reasons}</div></section>
+      <section class="rp-segs" data-slot="segs" aria-labelledby="seg-h"><div class="seg-head"><div><h2 id="seg-h">그룹별로 보기</h2><p class="sub">어떤 사람들이 어느 화면에서 그만뒀는지 봅니다. 칸이나 문장을 누르면 아래 100칸에서 그 사람들만 남습니다.</p></div><div data-part="pick"></div></div>
+        <div data-part="finds"></div><div data-part="table"></div><p class="c-note" data-part="note"></p></section>
       <section class="rp-row"><div class="rp-grid"><h2>AI ${rep.n}명 한 칸씩</h2><p class="sub">칸을 누르면 그 사람의 말과 행동을 나란히 봅니다.</p>${P.grid}</div><div class="rp-person" data-slot="person" aria-live="polite"></div></section>
       <section class="rp-row three"><div id="trust"><h2>이 결과를 얼마나 믿을까</h2>${P.calib}</div><div><h2>기획서 반응</h2>${P.ask}</div><div><h2>실제 참가자 초대</h2>${P.invite}</div></section></main>`;
     },

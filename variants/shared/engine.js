@@ -21,11 +21,38 @@
   const OPTIONS = {
     count: [[20, "20명"], [50, "50명"], [100, "100명"]],
     occupation: [["student", "대학생"], ["worker", "직장인"], ["all", "전체"]],
-    age: [["20-24", "20~24"], ["20-29", "20대"], ["25-34", "25~34"]],
+    age: [["20-29", "20대"], ["20-39", "20~30대"], ["20-49", "20~40대"]],
     price: [["low", "낮음"], ["mid", "중간"], ["high", "높음"], ["all", "전체"]],
     privacy: [["low", "낮음"], ["mid", "중간"], ["high", "높음"], ["all", "전체"]],
   };
-  const OPTION_LABELS = { count: "인원", occupation: "소속", age: "연령", price: "가격 민감도", privacy: "개인정보 우려" };
+  OPTIONS.compare = [["none", "안 함"], ["age", "연령"], ["occupation", "소속"], ["gender", "성별"], ["price", "가격 민감도"]];
+  OPTIONS.minPer = [[20, "20명"], [30, "30명"], [40, "40명"]];
+  const OPTION_LABELS = { count: "인원", occupation: "소속", age: "연령", price: "가격 민감도", privacy: "개인정보 우려", compare: "비교할 기준", minPer: "그룹당 최소 인원" };
+
+  // 그룹 비교: 기준별 그룹과 공개 분포 비중(전체 수치 보정용, 데모 예시값)
+  const AGE_GROUPS = [["a20", "20대", 20, 29, 0.31], ["a30", "30대", 30, 39, 0.32], ["a40", "40대", 40, 49, 0.37]];
+  const DIMS = {
+    age: { label: "연령", of: p => (AGE_GROUPS.find(g => p.age >= g[2] && p.age <= g[3]) || AGE_GROUPS[0])[0], names: Object.fromEntries(AGE_GROUPS.map(g => [g[0], g[1]])) },
+    occupation: { label: "소속", of: p => p.occupation, names: { student: "대학생", worker: "직장인" } },
+    gender: { label: "성별", of: p => (p.gender === "여성" ? "f" : "m"), names: { f: "여성", m: "남성" } },
+    price: { label: "가격 민감도", of: p => bandOf(p.price), names: { low: "가격 민감도 낮음", mid: "가격 민감도 중간", high: "가격 민감도 높음" } },
+    app: { label: "앱 이용 빈도", of: p => bandOf(p.app), names: { low: "앱 이용 적음", mid: "앱 이용 중간", high: "앱 이용 많음" } },
+  };
+  // 지금 범위(누구를 넣을까)에서 고른 기준으로 나눌 수 있는 그룹. 그룹이 둘 미만이면 비교할 수 없다.
+  function compareGroups(panel) {
+    const c = panel.compare;
+    if (!c || c === "none") return { ok: false, groups: [] };
+    const [aLo, aHi] = String(panel.age).split("-").map(Number);
+    let groups = [], why = "";
+    if (c === "age") { groups = AGE_GROUPS.filter(g => g[3] >= aLo && g[2] <= aHi).map(g => ({ key: g[0], label: g[1], share: g[4], lo: Math.max(g[2], aLo), hi: Math.min(g[3], aHi) })); why = "연령 범위를 20~30대 이상으로 넓혀야 연령끼리 비교할 수 있습니다."; }
+    if (c === "occupation") { groups = panel.occupation === "all" ? [{ key: "student", label: "대학생", share: 0.3 }, { key: "worker", label: "직장인", share: 0.7 }] : []; why = "소속을 '전체'로 해야 소속끼리 비교할 수 있습니다."; }
+    if (c === "gender") groups = [{ key: "f", label: "여성", share: 0.5 }, { key: "m", label: "남성", share: 0.5 }];
+    if (c === "price") { groups = panel.price === "all" ? ["low", "mid", "high"].map(b => ({ key: b, label: "가격 민감도 " + BAND_LABEL[b], share: PUBLIC_MIX.price[b] })) : []; why = "가격 민감도를 '전체'로 해야 가격 민감도끼리 비교할 수 있습니다."; }
+    if (groups.length < 2) return { ok: false, groups: [], why };
+    const tot = groups.reduce((a, g) => a + g.share, 0); groups.forEach(g => (g.share = g.share / tot));
+    return { ok: true, dim: c, groups };
+  }
+  const panelSize = panel => { const cg = compareGroups(panel); return cg.ok ? cg.groups.length * (panel.minPer || 30) : panel.count; };
 
   const TOOLS = { gcal: "구글 캘린더", notion: "노션", naver: "네이버 캘린더", paper: "종이 플래너", none: "따로 없음" };
   const TOOL_MIX = [["gcal", 0.34], ["notion", 0.22], ["naver", 0.16], ["paper", 0.12], ["none", 0.16]];
@@ -57,7 +84,7 @@
   ];
   const TASK = { text: "회원가입을 완료하세요", goal: "S05" };
 
-  const defaultPanel = () => ({ count: 100, occupation: "student", age: "20-29", price: "all", privacy: "all", seed: 0 });
+  const defaultPanel = () => ({ count: 100, occupation: "student", age: "20-29", price: "all", privacy: "all", seed: 0, compare: "none", minPer: 30 });
 
   function pickWeighted(r, mix) {
     let x = r(), acc = 0;
@@ -80,8 +107,43 @@
     return out;
   }
   function inBand(r, band) { const [lo, hi] = BANDS[band]; return round2(clamp(lo + 0.01 + r() * (hi - lo - 0.02), 0.02, 0.98)); }
+  function makePersona(r, i, f) {
+    const traits = [];
+    if (f.app >= 0.75) traits.push("앱을 자주 바꿔 씀");
+    if (f.digital >= 0.8) traits.push("새 서비스 먼저 써봄");
+    if (f.price >= 0.7) traits.push("구독료에 민감");
+    if (f.privacy >= 0.7) traits.push("개인정보 입력을 꺼림");
+    if (r() < 0.35) traits.push("시간에 쫓김");
+    if (f.tool !== "none" && f.tool !== "paper" && r() < 0.5) traits.push("기존 캘린더에 익숙");
+    return { id: `P${String(i + 1).padStart(3, "0")}`, age: f.age, gender: f.gender, occupation: f.occupation, region: REGIONS[Math.floor(r() * REGIONS.length)], price: f.price, privacy: f.privacy, app: f.app, digital: f.digital, tool: f.tool, traits, grp: f.grp };
+  }
+  // 비교 기준이 있으면 그룹마다 최소 인원을 채우고, 그룹 안에서는 가격·개인정보·앱 이용을 공개 분포대로 층화해 뽑는다
+  function generateGrouped(panel, cg) {
+    const r = rng(hash(JSON.stringify(panel))), per = panel.minPer || 30, out = [];
+    const [aLo, aHi] = String(panel.age).split("-").map(Number);
+    cg.groups.forEach(g => {
+      const qp = quota(r, per, cg.dim === "price" ? g.key : panel.price, "price"), qv = quota(r, per, panel.privacy, "privacy"), qa = quota(r, per, "all", "app");
+      for (let k = 0; k < per; k++) {
+        const lo = cg.dim === "age" ? g.lo : aLo, hi = cg.dim === "age" ? g.hi : aHi;
+        const age = lo + Math.floor(r() * (hi - lo + 1));
+        // 소속은 나이에 따라 대학생 비율이 달라진다 (데모 가정)
+        const occupation = cg.dim === "occupation" ? g.key : panel.occupation !== "all" ? panel.occupation : (r() < (age <= 24 ? 0.6 : age <= 29 ? 0.25 : 0.03) ? "student" : "worker");
+        const gender = cg.dim === "gender" ? (g.key === "f" ? "여성" : "남성") : (r() < 0.5 ? "여성" : "남성");
+        out.push(makePersona(r, out.length, { age, occupation, gender, price: inBand(r, qp[k]), privacy: inBand(r, qv[k]), app: inBand(r, qa[k]), digital: round2(bell(r, age >= 40 ? 0.5 : 0.62, 0.55)), tool: pickWeighted(r, TOOL_MIX), grp: g.key }));
+      }
+    });
+    // 그룹 순서대로 번호가 붙지 않게 섞은 뒤 번호를 다시 매긴다
+    for (let i = out.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [out[i], out[j]] = [out[j], out[i]]; }
+    out.forEach((p, i) => (p.id = `P${String(i + 1).padStart(3, "0")}`));
+    // 그룹마다 같은 인원을 뽑았으므로, 전체 수치는 공개 분포 비중으로 되돌려 계산한다 (가중치 = 비중 × 전체 인원 ÷ 그룹 인원)
+    const share = Object.fromEntries(cg.groups.map(g => [g.key, g.share]));
+    out.forEach(p => (p.w = Math.round(share[p.grp] * out.length / per * 10000) / 10000));
+    return out;
+  }
   function generatePersonas(panel) {
-    const r = rng(hash(JSON.stringify(panel)));
+    const cg = compareGroups(panel);
+    if (cg.ok) return generateGrouped(panel, cg);
+    const r = rng(hash(JSON.stringify({ count: panel.count, occupation: panel.occupation, age: panel.age, price: panel.price, privacy: panel.privacy, seed: panel.seed })));
     const qp = quota(r, panel.count, panel.price, "price"), qv = quota(r, panel.count, panel.privacy, "privacy");
     // 앱 이용 빈도도 가격·개인정보처럼 공개 분포(15·55·30%)에 맞춰 층화 샘플링한다 (선택 항목이 없어 늘 '전체')
     const qa = quota(r, panel.count, "all", "app");
@@ -133,12 +195,13 @@
       if (cur === TASK.goal) { end = { result: "complete", screen: cur }; break; }
       let risk = 0.04, reason = "UNCLEAR_PURPOSE";
       if (cur === "S01") { risk = 0.05 + (1 - p.digital) * 0.12; reason = "UNCLEAR_PURPOSE"; }
-      if (cur === "S02") { risk = 0.04 + p.privacy * 0.32; reason = "PRIVACY"; }
-      if (cur === "S03") { risk = 0.06 + (p.traits.includes("시간에 쫓김") ? 0.2 : 0) + p.privacy * 0.12; reason = p.privacy > 0.65 ? "PRIVACY" : "TOO_MANY_STEPS"; }
+      // 30대 이상은 휴대폰 인증 부담을 더 크게 느끼고, 직장인은 학교·학년을 묻는 화면에서 목적을 잃는다 (데모 규칙)
+      if (cur === "S02") { risk = 0.04 + p.privacy * 0.32 + (p.age >= 40 ? 0.26 : p.age >= 30 ? 0.06 : 0); reason = "PRIVACY"; }
+      if (cur === "S03") { risk = 0.06 + (p.traits.includes("시간에 쫓김") ? 0.2 : 0) + p.privacy * 0.12 + (p.occupation === "worker" ? 0.2 : 0); reason = p.occupation === "worker" ? "UNCLEAR_PURPOSE" : p.privacy > 0.65 ? "PRIVACY" : "TOO_MANY_STEPS"; }
       if (cur === "S04") { risk = 0.18 + (p.traits.includes("시간에 쫓김") ? 0.22 : 0) + (1 - p.app) * 0.2; reason = r() < 0.2 ? "NAVIGATION_LOST" : "TOO_MANY_STEPS"; }
       if (r() < risk) {
         const quotes = {
-          UNCLEAR_PURPOSE: "첫 화면만 봐서는 기존 캘린더랑 뭐가 다른지 모르겠어요.",
+          UNCLEAR_PURPOSE: cur === "S03" ? "직장인인데 학교랑 학년을 왜 묻는지 모르겠어요." : "첫 화면만 봐서는 기존 캘린더랑 뭐가 다른지 모르겠어요.",
           PRIVACY: "일정 앱에 휴대폰 인증까지 해야 하나 싶어서 여기서 멈출게요.",
           TOO_MANY_STEPS: cur === "S04" ? "관심분야를 5개나 고르라니 지금은 그만할래요." : "입력할 게 계속 늘어나서 나중에 할게요.",
           NAVIGATION_LOST: "건너뛰어도 되는 건지 몰라서 더 못 가겠어요.",
@@ -173,14 +236,18 @@
 
   function report(personas, results) {
     const n = results.length;
+    const W = Object.fromEntries(personas.map(p => [p.id, p.w || 1])), weighted = personas.some(p => p.w && p.w !== 1);
+    const wSum = list => list.reduce((a, r) => a + (W[r.id] || 1), 0), wTot = wSum(results);
+    const wPct = list => Math.round(wSum(list) / wTot * 100);
     const reach = (list, sid) => {
       const idx = SCREENS.findIndex(s => s.id === sid);
       return list.filter(x => x.end.result === "complete" || SCREENS.findIndex(s => s.id === x.end.screen) >= idx).length;
     };
     const aiEnds = results.map(r => r.act);
+    const reachW = sid => { const idx = SCREENS.findIndex(s => s.id === sid); return wPct(results.filter(r => r.act.end.result === "complete" || SCREENS.findIndex(s => s.id === r.act.end.screen) >= idx)); };
     const funnel = SCREENS.map(s => ({
       id: s.id, label: s.label,
-      ai: reach(aiEnds, s.id), aiPct: Math.round(reach(aiEnds, s.id) / n * 100),
+      ai: reach(aiEnds, s.id), aiPct: reachW(s.id),
       real: reach(REAL, s.id), realPct: Math.round(reach(REAL, s.id) / REAL.length * 100),
     }));
     const aiDone = aiEnds.filter(a => a.end.result === "complete").length;
@@ -197,22 +264,57 @@
     };
     const aiReasons = tally(aiEnds.filter(a => a.end.result === "drop").map(a => a.end.reason));
     const realReasons = tally(REAL.filter(a => a.end.result === "drop").map(a => a.end.reason));
-    const dropScreens = tally(aiEnds.filter(a => a.end.result === "drop").map(a => a.end.screen));
+    // 가장 많이 그만둔 화면은 보정된 비중으로 순위를 매긴다 (값은 표본 인원)
+    const dropScreens = tally(aiEnds.filter(a => a.end.result === "drop").map(a => a.end.screen))
+      .map(([k, c]) => [k, c, wSum(results.filter(r => r.act.end.result === "drop" && r.act.end.screen === k))]).sort((a, b) => b[2] - a[2]).map(([k, c]) => [k, c]);
     const realDropScreens = tally(REAL.filter(a => a.end.result === "drop").map(a => a.end.screen));
     const wtps = results.map(r => r.ask.wtp).sort((a, b) => a - b);
     const median = wtps.length ? wtps[Math.floor(wtps.length / 2)] : 0;
     const features = tally(results.flatMap(r => r.ask.needed));
-    const aiRate = Math.round(aiDone / n * 100), realRate = Math.round(realDone / REAL.length * 100);
+    const aiRate = wPct(results.filter(r => r.act.end.result === "complete")), realRate = Math.round(realDone / REAL.length * 100);
     const top3 = l => l.slice(0, 3).map(x => x[0]);
     const overlap = top3(aiReasons).filter(k => top3(realReasons).includes(k)).length;
     return {
       n, realN: REAL.length, funnel, aiDone, realDone, aiRate, realRate, gap: aiRate - realRate,
-      saidYes: said.length, saidYesRate: Math.round(said.length / n * 100),
-      avgIntent: (results.reduce((s, r) => s + r.ask.intent, 0) / n).toFixed(1),
+      saidYes: said.length, saidYesRate: wPct(said), weighted,
+      avgIntent: (results.reduce((s, r) => s + r.ask.intent * (W[r.id] || 1), 0) / wTot).toFixed(1),
       groups, aiReasons, realReasons, dropScreens, realDropScreens,
       topScreenMatch: dropScreens[0] && realDropScreens[0] && dropScreens[0][0] === realDropScreens[0][0],
       reasonOverlap: overlap, median, features, paying: wtps.filter(v => v > 0).length,
     };
+  }
+
+  // 그룹별 결과: 그룹 × 화면 이탈 표와, 전체보다 눈에 띄게 다른 그룹을 문장으로 고른다
+  const josa = w => { const c = w.charCodeAt(w.length - 1); return c >= 0xac00 && c <= 0xd7a3 && (c - 0xac00) % 28 ? "은" : "는"; };
+  const MIN_GROUP = 15;
+  function segments(personas, results, dim) {
+    const D = DIMS[dim], byId = Object.fromEntries(personas.map(p => [p.id, p])), W = id => byId[id].w || 1;
+    const steps = SCREENS.filter(s => s.id !== TASK.goal);
+    const wTot = results.reduce((a, r) => a + W(r.id), 0);
+    const overall = { done: results.reduce((a, r) => a + (r.act.end.result === "complete" ? W(r.id) : 0), 0) / wTot, drop: {} };
+    steps.forEach(s => (overall.drop[s.id] = results.reduce((a, r) => a + (r.act.end.result === "drop" && r.act.end.screen === s.id ? W(r.id) : 0), 0) / wTot));
+    const keys = Object.keys(D.names), rows = keys.map(k => {
+      const rs = results.filter(r => D.of(byId[r.id]) === k), n = rs.length, drops = {};
+      steps.forEach(s => (drops[s.id] = rs.filter(r => r.act.end.result === "drop" && r.act.end.screen === s.id).length));
+      const done = rs.filter(r => r.act.end.result === "complete").length;
+      return { key: k, label: D.names[k], n, done, doneRate: n ? done / n : 0, drops, small: n < MIN_GROUP };
+    }).filter(r => r.n > 0);
+    rows.forEach(r => (r.hot = {}));
+    const finds = [];
+    rows.filter(r => !r.small).forEach(r => {
+      steps.forEach(s => {
+        const c = r.drops[s.id], rate = c / r.n, base = overall.drop[s.id];
+        if (c >= 4 && rate - base >= 0.1 && rate >= base * 1.3) {
+          r.hot[s.id] = true;
+          const x = rate / Math.max(base, 0.01);
+          finds.push({ score: rate - base, key: r.key, screen: s.id, text: `${r.label}${josa(r.label)} ${s.id} ${s.label}에서 ${base < 0.02 ? "다른 그룹보다 유독 많이" : `전체보다 ${x >= 2 ? x.toFixed(1) + "배" : Math.round((rate - base) * 100) + "%p"} 많이`} 그만뒀습니다`, note: `${c}/${r.n}명 · 전체 ${Math.round(base * 100)}%` });
+        }
+      });
+      const d = r.doneRate - overall.done;
+      if (Math.abs(d) >= 0.15) finds.push({ score: Math.abs(d) * 0.8, key: r.key, screen: "", text: `${r.label}${josa(r.label)} 끝까지 간 비율이 전체보다 ${Math.round(Math.abs(d) * 100)}%p ${d < 0 ? "낮습니다" : "높습니다"}`, note: `${r.done}/${r.n}명 · 전체 ${Math.round(overall.done * 100)}%` });
+    });
+    finds.sort((a, b) => b.score - a.score);
+    return { dim, label: D.label, steps, rows, overall, findings: finds.slice(0, 3), minGroup: MIN_GROUP, groupOf: id => D.of(byId[id]) };
   }
 
   // 패널 분포 점검: 목표 대비 실제 표본
@@ -236,5 +338,6 @@
   global.PL = {
     hash, rng, clamp, OPTIONS, OPTION_LABELS, TOOLS, DROP, PRODUCT, SCREENS, TASK, BAND_LABEL, PUBLIC_MIX,
     defaultPanel, generatePersonas, simulate, report, distribution, percentile, bandOf, REAL, load, save,
+    DIMS, compareGroups, panelSize, segments, MIN_GROUP,
   };
 })(window);

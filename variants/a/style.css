@@ -95,3 +95,37 @@
   .trust{flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:6px}.trust .t-k{flex-basis:auto}.trust div{justify-content:space-between;width:100%}.trust .t-more{margin-left:0}
   .orbit-box{height:400px;margin-top:0}
 }
+
+/* 그룹 비교 (2026-11-05) — 그룹 색은 파랑 계열 세 단계, 빨강은 쓰지 않는다 */
+:root{--g0:#12233D;--g1:#2F7FC4;--g2:#8DB9DF;--g3:#5E6B7E}
+.p-q{border-top:1.5px solid var(--ink);margin-top:14px;padding-top:10px}.p-q b{display:block;font-size:14px}.p-q span{display:block;font-size:12px;color:var(--sub);margin-top:2px}
+.seg button[aria-disabled=true]{color:#a6b0bd;text-decoration:line-through;cursor:not-allowed}
+.why{font-size:12px;color:#9a5a12;min-height:0;margin:2px 0 0}.why:empty{display:none}
+.p-chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 6px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:1px solid var(--line);background:var(--surface);font-size:12px;border-radius:14px}
+.chip.ok::before,.chip.warn::before{content:"";width:7px;height:7px;border-radius:50%;background:#2f8f5b}.chip.warn{border-color:#e3b18d}.chip.warn::before{background:#d98a1f}
+.chip.grp::before{display:none}.chip.grp i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.chip.g0 i,.dot.g0{fill:var(--g0);background:var(--g0)}.chip.g1 i,.dot.g1{fill:var(--g1);background:var(--g1)}.chip.g2 i,.dot.g2{fill:var(--g2);background:var(--g2)}.chip.g3 i,.dot.g3{fill:var(--g3);background:var(--g3)}
+.grp-tag{display:inline-block;font-size:12px;font-weight:700;border:1px solid var(--ink);padding:1px 8px;margin-top:8px}
+.setup-foot .summary{color:var(--ink);font-weight:600}
+.rp-segs{padding:36px 0;border-bottom:1px solid var(--line)}
+.seg-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}.seg-head h2{font-size:17px;margin-bottom:4px}.seg-head .sub{font-size:13px}
+.seg-pick{display:flex;gap:16px;flex-wrap:wrap}.seg-pick button{font-size:14px;color:var(--sub);padding:2px 0;border-bottom:2px solid transparent}.seg-pick button[aria-checked=true]{color:var(--ink);font-weight:700;border-color:var(--ink)}
+.seg-finds{list-style:none;margin:18px 0 6px;display:grid;gap:0;border-top:1px solid var(--ink)}
+.seg-finds button{display:flex;justify-content:space-between;gap:16px;width:100%;text-align:left;padding:12px 0;border-bottom:1px solid var(--line);font-size:15px}
+.seg-finds button b{font-weight:700}.seg-finds button span{font-size:13px;color:var(--sub);white-space:nowrap}.seg-finds button.on,.seg-finds button:hover{background:rgba(159,205,239,.25)}
+.seg-none{font-size:14px;color:var(--sub);margin:18px 0 6px}
+.seg-table-wrap{overflow-x:auto;margin-top:14px}
+.seg-table{border-collapse:collapse;width:100%;font-size:14px;min-width:560px}
+.seg-table th,.seg-table td{padding:0;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+.seg-table thead th{font-size:12px;color:var(--sub);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--ink)}
+.seg-table th small{display:block;font-weight:400;font-size:11px;color:var(--sub)}
+.seg-table tbody th{text-align:left;padding:9px 10px 9px 0;font-weight:700}
+.seg-table td button{width:100%;text-align:right;padding:10px;font-variant-numeric:tabular-nums}
+.seg-table td button:hover,.seg-table td button.on{background:rgba(159,205,239,.3)}
+.seg-table tr.all td{padding:10px;color:var(--sub)}.seg-table tr.all th{color:var(--sub)}
+.seg-table td.hot button{color:var(--drop);font-weight:800;background:rgba(194,61,24,.08)}
+.seg-table tr.small th,.seg-table tr.small td{opacity:.45}
+.rp-segs .c-note{margin-top:10px}
+@media (max-width:860px){.seg-finds button{flex-direction:column;gap:2px}.seg-finds button span{white-space:normal}}
+.r-bars{overflow:hidden}

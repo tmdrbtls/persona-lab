@@ -15,7 +15,8 @@
     [0.4, 0.7].forEach(t => { s += `<line class="guide" x1="${X(t)}" y1="${y0}" x2="${X(t)}" y2="${y1}"/><line class="guide" x1="${x0}" y1="${Y(t)}" x2="${x1}" y2="${Y(t)}"/>`; });
     personas.forEach(p => {
       if (p.id === selId) return;
-      s += `<circle class="dot" data-id="${p.id}" cx="${X(p.price).toFixed(1)}" cy="${Y(p.app).toFixed(1)}" r="4.6"><title>${p.id}</title></circle>`;
+      const gi = opt.groupIdx ? opt.groupIdx[p.grp] : undefined;
+      s += `<circle class="dot${gi !== undefined ? " g" + gi : ""}" data-id="${p.id}" cx="${X(p.price).toFixed(1)}" cy="${Y(p.app).toFixed(1)}" r="4.6"><title>${p.id}</title></circle>`;
     });
     const sel = personas.find(p => p.id === selId);
     if (sel) s += `<circle class="sel-ring" cx="${X(sel.price)}" cy="${Y(sel.app)}" r="11"/><circle class="dot sel" data-id="${sel.id}" cx="${X(sel.price)}" cy="${Y(sel.app)}" r="5.5"/><text class="sel-label" x="${X(sel.price) + 15}" y="${Y(sel.app) + 4}">${sel.id}</text>`;

@@ -40,8 +40,8 @@
   });
 
   // ---------- 공통 조각 ----------
-  const seg = (key, cls = "seg") => `<div class="set" data-key="${key}"><div class="set-label">${PL.OPTION_LABELS[key]}</div><div class="${cls}" role="radiogroup" aria-label="${PL.OPTION_LABELS[key]}">` +
-    PL.OPTIONS[key].map(([v, l]) => `<button type="button" role="radio" aria-checked="${String(S.panel[key]) === String(v)}" data-val="${v}">${l}</button>`).join("") + `</div></div>`;
+  const seg = (key, cls = "seg", off = {}) => `<div class="set" data-key="${key}"><div class="set-label">${PL.OPTION_LABELS[key]}</div><div class="${cls}" role="radiogroup" aria-label="${PL.OPTION_LABELS[key]}">` +
+    PL.OPTIONS[key].map(([v, l]) => `<button type="button" role="radio" aria-checked="${String(S.panel[key]) === String(v)}" data-val="${v}"${off[v] ? ` aria-disabled="true" title="${esc(off[v])}"` : ""}>${l}</button>`).join("") + `</div></div>`;
   const steps = active => `<ol class="steps">${STEPS.map(([r, l]) => `<li class="${r === active ? "on" : ""}"><a href="#/${r}">${l}</a></li>`).join("")}</ol>`;
   const facts = p => [["가격 민감도", "price"], ["앱 이용 빈도", "app"], ["디지털 수용도", "digital"], ["개인정보 우려", "privacy"]]
     .map(([l, k]) => {
@@ -69,6 +69,7 @@
       root.querySelector("[data-slot=side]").innerHTML = o.side(pById(sel), ps);
       const chk = root.querySelector("[data-slot=check]"); if (chk) chk.innerHTML = o.check ? o.check(ps) : distNote(ps);
       root.querySelectorAll("[data-slot=count]").forEach(e => e.textContent = ps.length);
+      root.querySelectorAll("[data-slot=summary]").forEach(e => e.textContent = panelSummary());
       root.querySelectorAll(".set").forEach(set => set.querySelectorAll("button").forEach(b => b.setAttribute("aria-checked", String(S.panel[set.dataset.key]) === b.dataset.val)));
       root.querySelectorAll("[data-slot=chart] [data-id]").forEach(n => { n.style.cursor = "pointer"; n.addEventListener("click", () => { sel = n.dataset.id; S.sel = sel; save(); draw(); }); });
     };
@@ -86,10 +87,34 @@
     });
     root.querySelectorAll(".set").forEach(set => set.addEventListener("click", e => {
       const b = e.target.closest("button"); if (!b) return;
-      const k = set.dataset.key, v = b.dataset.val; S.panel[k] = k === "count" ? Number(v) : v; S.ran = false; save(); draw();
+      if (b.getAttribute("aria-disabled") === "true") { const n = root.querySelector("[data-slot=why]"); if (n) n.textContent = b.title; return; }
+      const k = set.dataset.key, v = b.dataset.val; S.panel[k] = k === "count" || k === "minPer" ? Number(v) : v; S.ran = false; save();
+      // 범위나 비교 기준을 바꾸면 고를 수 있는 선택지가 달라지므로 왼쪽을 다시 그린다
+      if (o.rerender && o.rerender.includes(k)) { render(); return; }
+      draw();
     }));
     root.querySelectorAll("[data-act=redraw]").forEach(b => b.addEventListener("click", () => { S.panel.seed = (S.panel.seed || 0) + 1; S.ran = false; save(); draw(); }));
     draw();
+  }
+  const SCOPE_LABEL = () => { const o = k => (PL.OPTIONS[k].find(x => String(x[0]) === String(S.panel[k])) || [, ""])[1]; return `${o("occupation") === "전체" ? "소속 전체" : o("occupation")} · ${o("age")}`; };
+  function panelSummary() {
+    const cg = PL.compareGroups(S.panel), n = PL.panelSize(S.panel);
+    return cg.ok ? `${n}명 · ${SCOPE_LABEL()} · ${PL.DIMS[cg.dim].label} ${cg.groups.length}그룹 비교 · 그룹당 ${S.panel.minPer || 30}명` : `${n}명 · ${SCOPE_LABEL()}`;
+  }
+  // 지금 범위에서 비교할 수 없는 기준은 이유와 함께 막는다
+  function compareOff() {
+    const off = {};
+    PL.OPTIONS.compare.forEach(([v]) => { if (v === "none") return; const cg = PL.compareGroups({ ...S.panel, compare: v }); if (!cg.ok) off[v] = cg.why; });
+    return off;
+  }
+  // 비교 기준이 있으면 그룹별 인원 칩, 없으면 목표 분포 점검 칩
+  function groupChips(ps) {
+    const cg = PL.compareGroups(S.panel);
+    if (!cg.ok) {
+      const chip = (label, key, choice, mix) => { const d = PL.distribution(ps, key, choice, mix), max = Math.max(...d.map(x => Math.abs(x.pct - x.target))); return choice !== "all" ? `<span class="chip">${label} '${PL.BAND_LABEL[choice]}'로 고정</span>` : `<span class="chip ${max <= 5 ? "ok" : "warn"}">${label} ${max <= 5 ? "목표와 맞음" : `목표와 ${max}%p 차이`}</span>`; };
+      return chip("가격 민감도", "price", S.panel.price, "price") + chip("앱 이용 빈도", "app", "all", "app") + chip("개인정보 우려", "privacy", S.panel.privacy, "privacy");
+    }
+    return cg.groups.map((g, i) => { const n = ps.filter(p => p.grp === g.key).length, ok = n >= (S.panel.minPer || 30); return `<span class="chip grp g${i} ${ok ? "ok" : "warn"}"><i></i>${g.label} ${n}명${ok ? "" : " · 모자람"}</span>`; }).join("");
   }
   function distNote(ps) {
     const d = PL.distribution(ps, "price", S.panel.price, "price"), max = Math.max(...d.map(x => Math.abs(x.pct - x.target)));
@@ -175,7 +200,23 @@
     const invite = `<div class="invite"><p>같은 프로토타입과 과제를 실제 사람에게도 시켜 AI 예측의 오차를 잽니다. 링크를 받은 사람은 로그인 없이 참여합니다.</p>
       <div class="inv-row"><code data-slot="invlink">${S.invited ? location.href.split("#")[0] + "#/p/demo" : "아직 만든 링크가 없습니다"}</code><button type="button" data-act="invite">${S.invited ? "링크 복사" : "참가 링크 만들기"}</button></div>
       <div class="c-note">참여 ${rep.realN}/15명 · 예시 데이터 · <a href="#/p/demo">참가자 화면 미리보기</a></div></div>`;
-    return { rep, reasons, grid, person, gapLine, gapText, trust, calib, ask, invite, funnel: CH.funnel(rep, CH.narrow() ? { w: 380 } : {}), firstId: rep.groups.yesDrop[0] || rs[0].id };
+    const cg = PL.compareGroups(S.panel);
+    const segDim = S.segDim || (cg.ok ? cg.dim : "age");
+    return { rep, reasons, grid, person, gapLine, gapText, trust, calib, ask, invite, funnel: CH.funnel(rep, CH.narrow() ? { w: 380 } : {}), firstId: rep.groups.yesDrop[0] || rs[0].id, segDim, segs: segBlock(segDim) };
+  }
+  // 그룹별로 보기: 위에는 눈에 띄는 그룹 문장, 아래에는 그룹 × 화면 표
+  function segBlock(dim) {
+    const sg = PL.segments(personas(), results(), dim), cg = PL.compareGroups(S.panel);
+    const dims = ["age", "occupation", "gender", "price", "app"];
+    const pick = `<div class="seg-pick" role="radiogroup" aria-label="나눌 기준">${dims.map(d => `<button type="button" role="radio" data-dim="${d}" aria-checked="${d === dim}">${PL.DIMS[d].label}${cg.ok && cg.dim === d ? " · 비교 기준" : ""}</button>`).join("")}</div>`;
+    const finds = sg.findings.length
+      ? `<ul class="seg-finds">${sg.findings.map(f => `<li><button type="button" data-grp="${f.key}" data-screen="${f.screen}"><b>${esc(f.text)}</b><span>${f.note}</span></button></li>`).join("")}</ul>`
+      : `<p class="seg-none">이 기준으로는 전체와 눈에 띄게 다른 그룹이 없습니다.</p>`;
+    const head = `<tr><th scope="col">그룹</th>${sg.steps.map(s => `<th scope="col">${s.id}<small>${s.label}</small></th>`).join("")}<th scope="col">끝까지 감</th></tr>`;
+    const allRow = `<tr class="all"><th scope="row">전체<small>보정 비율</small></th>${sg.steps.map(s => `<td>${Math.round(sg.overall.drop[s.id] * 100)}%</td>`).join("")}<td>${Math.round(sg.overall.done * 100)}%</td></tr>`;
+    const rows = sg.rows.map(r => `<tr class="${r.small ? "small" : ""}"><th scope="row">${r.label}<small>${r.n}명${r.small ? " · 인원 적음" : ""}</small></th>${sg.steps.map(s => `<td class="${r.hot[s.id] ? "hot" : ""}"><button type="button" data-grp="${r.key}" data-screen="${s.id}" aria-label="${r.label} 중 ${s.id}에서 그만둔 ${r.drops[s.id]}명 보기">${r.drops[s.id]}</button></td>`).join("")}<td><button type="button" data-grp="${r.key}" data-screen="done">${r.done} <small>(${Math.round(r.doneRate * 100)}%)</small></button></td></tr>`).join("");
+    const note = `칸의 숫자는 그 화면에서 그만둔 사람 수입니다. ${sg.minGroup}명 미만인 그룹은 흐리게 표시하고 문장에서 뺍니다. AI 패널 기준이며 실제 참가자로 검증되지 않았습니다.${cg.ok ? " 전체 비율은 그룹마다 같은 인원을 뽑은 것을 공개 분포 비중으로 보정한 값입니다." : ""}`;
+    return { pick, finds, table: `<div class="seg-table-wrap"><table class="seg-table"><thead>${head}</thead><tbody>${allRow}${rows}</tbody></table></div>`, note, groupOf: sg.groupOf };
   }
   function mountReport(root) {
     const parts = reportParts();
@@ -200,6 +241,29 @@
       try { navigator.clipboard.writeText(url); b.textContent = "복사했습니다"; } catch (e) { b.textContent = "주소를 직접 복사하세요"; }
     }));
     root.querySelectorAll("[data-act=rerun]").forEach(b => b.addEventListener("click", () => { S.ran = false; save(); go("new/prototype"); }));
+    // 그룹별로 보기: 기준을 바꾸면 그 영역만 다시 그리고, 칸이나 문장을 누르면 아래 100칸에서 그 사람들만 남긴다
+    const segBox = root.querySelector("[data-slot=segs]");
+    const wireSeg = (dim) => {
+      if (!segBox) return;
+      const b = segBlock(dim);
+      segBox.querySelector("[data-part=pick]").innerHTML = b.pick; segBox.querySelector("[data-part=finds]").innerHTML = b.finds;
+      segBox.querySelector("[data-part=table]").innerHTML = b.table; segBox.querySelector("[data-part=note]").textContent = b.note;
+      segBox.querySelectorAll("[data-dim]").forEach(x => x.addEventListener("click", () => { S.segDim = x.dataset.dim; save(); wireSeg(x.dataset.dim); }));
+      segBox.querySelectorAll("[data-grp]").forEach(x => x.addEventListener("click", () => {
+        const on = !x.classList.contains("on");
+        segBox.querySelectorAll("[data-grp]").forEach(y => y.classList.remove("on")); root.querySelectorAll(".reason, .frow").forEach(y => y.classList.remove("on"));
+        if (on) x.classList.add("on");
+        const g = x.dataset.grp, sc = x.dataset.screen;
+        root.querySelectorAll(".cell").forEach(c => {
+          const r = results().find(z => z.id === c.dataset.id), hit = b.groupOf(c.dataset.id) === g && (!sc || (sc === "done" ? r.act.end.result === "complete" : c.dataset.screen === sc));
+          c.classList.toggle("dim", on && !hit);
+        });
+        const first = on && [...root.querySelectorAll(".cell")].find(c => !c.classList.contains("dim"));
+        if (first) show(first.dataset.id);
+        const grid = root.querySelector(".grid100"); if (on && grid) grid.scrollIntoView({ behavior: "smooth", block: "center" });
+      }));
+    };
+    wireSeg(parts.segDim);
     show(parts.firstId);
   }
 
@@ -304,5 +368,5 @@
     },
   };
 
-  g.APP = { S, V, go, render, save, esc, seg, steps, facts, who, profileLine, personas, results, report, pById, mountPanel, mountRun, reportParts, mountReport, distNote, DROP_SHORT };
+  g.APP = { S, V, go, render, save, esc, seg, steps, facts, who, profileLine, personas, results, report, pById, mountPanel, mountRun, reportParts, mountReport, distNote, DROP_SHORT, panelSummary, compareOff, groupChips, segBlock };
 })(window);
