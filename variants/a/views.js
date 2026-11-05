@@ -73,25 +73,95 @@
     }),
   };
 
+  // 결과: 위는 3초 안에 읽히는 요약(계획서 5-1), 아래는 하나만 펼쳐지는 탭 네 개
+  const TABS = [["group", "그룹별"], ["person", "사람별"], ["ask", "기획서 반응"], ["trust", "신뢰도"]];
+  const TAB_KEY = "pl-a-report-tab";
+  const savedTab = () => { try { const t = sessionStorage.getItem(TAB_KEY); return TABS.some(x => x[0] === t) ? t : "group"; } catch (e) { return "group"; } };
+  const scr = id => (PL.SCREENS.find(s => s.id === id) || {}).label || "";
+  const motion = () => (matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth");
   V.report = {
     html: () => {
-      const P = reportParts(), rep = P.rep;
+      const P = reportParts(), rep = P.rep, top = rep.dropScreens[0], cur = savedTab();
+      const s1 = rep.aiDone < rep.saidYes ? `${rep.saidYes}명이 쓰겠다고 했지만 ${rep.aiDone}명만 끝까지 갔습니다.` : `${rep.saidYes}명이 쓰겠다고 했고 ${rep.aiDone}명이 끝까지 갔습니다.`;
+      const s2 = top ? `가장 많이 그만둔 곳은 <em class="drop-name">${top[0]} ${scr(top[0])}</em>입니다.` : "중간에 그만둔 사람이 없습니다.";
+      const tab = ([k, l]) => `<button type="button" role="tab" id="tab-${k}" aria-controls="pn-${k}" aria-selected="${k === cur}" tabindex="${k === cur ? 0 : -1}">${l}</button>`;
+      const panel = (k, body) => `<div role="tabpanel" id="pn-${k}" class="pn" aria-labelledby="tab-${k}" tabindex="0"${k === cur ? "" : " hidden"}>${body}</div>`;
       return `<main class="v-report">${V.nav("setup")}${steps("report")}
-      <header class="rp-head"><div><h1>${esc(S.product.name)} · ${esc(S.task)}</h1><p class="sub">AI 패널 ${rep.n}명, 실제 참가자 ${rep.realN}명 · AI가 쓴 문장은 실제 사람의 답이 아닙니다 · 예시 데이터</p></div>
-        <div class="rp-actions"><button class="btn-ghost" data-act="rerun">화면 고치고 다시 실행</button></div></header>
-      <section class="rp-top"><div class="kpi"><span class="k">쓰겠다고 답함</span><b>${rep.saidYesRate}%</b></div><div class="kpi"><span class="k">AI가 끝까지 감</span><b>${rep.aiRate}%</b></div><div class="kpi"><span class="k">실제 사람이 끝까지 감</span><b class="dim">${rep.realRate}%</b></div>
-        <p class="gap">${P.gapLine}</p>
-        <div class="trust" aria-label="이 결과를 얼마나 믿을까"><span class="t-k">실제 참가자 ${rep.realN}명과 비교</span>${P.trust.map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join("")}<a href="#trust" class="t-more" data-jump="trust">자세히</a></div></section>
-      <section class="rp-row"><div class="rp-funnel"><h2>화면별로 남은 사람</h2><p class="sub">행을 누르면 그 화면에서 그만둔 사람이 아래 표에 표시됩니다.</p>${P.funnel}</div>
-        <div class="rp-reasons"><h2>그만둔 이유</h2><p class="sub">굵은 막대 AI, 가는 막대 실제</p>${P.reasons}</div></section>
-      <section class="rp-segs" data-slot="segs" aria-labelledby="seg-h"><div class="seg-head"><div><h2 id="seg-h">그룹별로 보기</h2><p class="sub">어떤 사람들이 어느 화면에서 그만뒀는지 봅니다. 칸이나 문장을 누르면 아래 100칸에서 그 사람들만 남습니다.</p></div><div data-part="pick"></div></div>
-        <div data-part="finds"></div><div data-part="table"></div><p class="c-note" data-part="note"></p></section>
-      <section class="rp-row"><div class="rp-grid"><h2>AI ${rep.n}명 한 칸씩</h2><p class="sub">칸을 누르면 그 사람의 말과 행동을 나란히 봅니다.</p>${P.grid}</div><div class="rp-person" data-slot="person" aria-live="polite"></div></section>
-      <section class="rp-row three"><div id="trust"><h2>이 결과를 얼마나 믿을까</h2>${P.calib}</div><div><h2>기획서 반응</h2>${P.ask}</div><div><h2>실제 참가자 초대</h2>${P.invite}</div></section></main>`;
+      <section class="rp-sum" aria-labelledby="rp-h">
+        <header class="rp-head"><h1 id="rp-h">${s1}<br>${s2}</h1><p class="sub">${esc(S.product.name)} · ${esc(S.task)} · AI 패널 ${rep.n}명 · 실제 참가자 ${rep.realN}명 · AI가 쓴 문장은 실제 사람의 답이 아닙니다 · 예시 데이터</p></header>
+        <div class="rp-top"><div class="kpi"><span class="k">쓰겠다고 답함</span><b>${rep.saidYesRate}<small>%</small></b></div><div class="kpi"><span class="k">AI가 끝까지 감</span><b>${rep.aiRate}<small>%</small></b></div><div class="kpi"><span class="k">실제 사람이 끝까지 감</span><b class="dim">${rep.realDone}<small>/${rep.realN}명</small></b></div>
+          <div class="trust" aria-label="이 결과를 얼마나 믿을까"><span class="t-k">실제 ${rep.realN}명과 비교</span>${P.trust.map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join("")}<button type="button" class="t-more" data-tabgo="trust">자세히</button></div></div>
+        <div class="sum-row"><div class="rp-funnel"><h2>화면별로 남은 사람 <small>굵은 막대 AI · 가는 막대 실제 · 행을 누르면 그 사람들을 봅니다</small></h2>${CH.funnel(rep, CH.narrow() ? { w: 380, rowH: 42 } : { w: 640, rowH: 36 })}</div>
+          <div class="rp-reasons"><h2>그만둔 이유 상위 3개</h2>${P.reasons3}</div></div>
+        <div class="sum-finds"><h2>그룹별로 눈에 띄는 점 <small data-slot="finds-dim"></small></h2><div data-slot="finds"></div></div>
+        <div class="rp-next"><button type="button" class="btn-primary" data-act="rerun">화면 고치고 다시 실행</button><button type="button" class="btn-ghost" data-tabgo="trust" data-target="invite">실제 참가자 초대</button></div>
+      </section>
+      <section class="rp-tabs" aria-label="결과 자세히 보기"><div class="tabs" role="tablist" aria-label="결과 자세히 보기">${TABS.map(tab).join("")}</div>
+        ${panel("group", `<div class="rp-segs" data-slot="segs"><div class="seg-head"><p class="sub">어떤 사람들이 어느 화면에서 그만뒀는지 봅니다. 칸을 누르면 ‘사람별’에서 그 사람들만 남깁니다.</p><div data-part="pick"></div></div><div data-part="table"></div><p class="c-note" data-part="note"></p></div>`)}
+        ${panel("person", `<div class="pf-bar" data-slot="pfilter" aria-live="polite"></div><div class="rp-row"><div class="rp-grid"><p class="sub">AI ${rep.n}명을 한 칸씩 놓았습니다. 칸을 누르면 그 사람의 말과 행동을 나란히 봅니다.</p>${P.grid}</div><div class="rp-person" data-slot="person" aria-live="polite"></div></div>`)}
+        ${panel("ask", `<div class="rp-row"><div>${P.ask}</div><p class="sub">AI 패널이 기획서를 읽고 답한 ‘말’입니다. 프로토타입에서의 ‘행동’과는 다를 수 있습니다.</p></div>`)}
+        ${panel("trust", `<div class="rp-row"><div><h2>AI와 실제 비교</h2>${P.calib}</div><div id="invite"><h2>실제 참가자 초대</h2>${P.invite}</div></div>`)}
+      </section></main>`;
     },
     mount: root => {
-      mountReport(root);
-      root.querySelectorAll("[data-jump]").forEach(a => a.addEventListener("click", e => { e.preventDefault(); const t = root.querySelector("#" + a.dataset.jump); t.scrollIntoView({ behavior: "smooth", block: "start" }); const h = t.querySelector("h2"); h.setAttribute("tabindex", "-1"); h.focus({ preventScroll: true }); }));
+      const tabs = [...root.querySelectorAll("[role=tab]")], tabBox = root.querySelector(".rp-tabs");
+      const open = (k, focusTab) => {
+        tabs.forEach(t => { const on = t.id === "tab-" + k; t.setAttribute("aria-selected", on); t.tabIndex = on ? 0 : -1; if (on && focusTab) t.focus(); });
+        root.querySelectorAll("[role=tabpanel]").forEach(p => (p.hidden = p.id !== "pn-" + k));
+        try { sessionStorage.setItem(TAB_KEY, k); } catch (e) {}
+      };
+      tabs.forEach((t, i) => {
+        t.addEventListener("click", () => open(t.id.slice(4)));
+        t.addEventListener("keydown", e => {
+          const j = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 }[e.key];
+          if (j === undefined) return;
+          e.preventDefault(); open(tabs[(j + tabs.length) % tabs.length].id.slice(4), true);
+        });
+      });
+      // '자세히'와 '실제 참가자 초대'는 신뢰도 탭을 열고 그 자리로 간다
+      root.querySelectorAll("[data-tabgo]").forEach(b => b.addEventListener("click", () => {
+        open(b.dataset.tabgo);
+        const t = (b.dataset.target && root.querySelector("#" + b.dataset.target)) || tabBox;
+        t.scrollIntoView({ behavior: motion(), block: "start" });
+        const f = b.dataset.target ? t.querySelector("button") : root.querySelector("#tab-" + b.dataset.tabgo);
+        if (f) f.focus({ preventScroll: true });
+      }));
+      const unfilter = () => {
+        root.querySelectorAll(".cell").forEach(c => c.classList.remove("dim"));
+        root.querySelectorAll(".reason, .frow, [data-slot=segs] [data-grp]").forEach(b => b.classList.remove("on"));
+        root.querySelectorAll(".frow").forEach(x => x.setAttribute("aria-pressed", "false"));
+        root.querySelector("[data-slot=pfilter]").innerHTML = "";
+      };
+      // 퍼널·이유·그룹 칸을 누르면 '사람별' 탭을 열고, 무엇으로 좁혔는지 위에 적는다
+      const reveal = f => {
+        const bar = root.querySelector("[data-slot=pfilter]");
+        if (!f.on) { bar.innerHTML = ""; return; }
+        const what = f.kind === "screen" ? `${f.value} ${scr(f.value)}에서 그만둔 사람`
+          : f.kind === "reason" ? `‘${PL.DROP[f.value]}’ 때문에 그만둔 사람`
+          : `${PL.DIMS[f.dim].names[f.value]} 중 ${f.screen === "done" ? "끝까지 간 사람" : `${f.screen} ${scr(f.screen)}에서 그만둔 사람`}`;
+        bar.innerHTML = `<span>지금 보는 사람 · <b>${esc(what)}</b> ${f.count}명</span><button type="button" data-act="unfilter">전체 보기</button>`;
+        bar.querySelector("[data-act=unfilter]").addEventListener("click", unfilter);
+        open("person");
+        const first = root.querySelector(".cell:not(.dim)"); if (first && !first.classList.contains("picked")) first.click();
+        tabBox.scrollIntoView({ behavior: motion(), block: "start" });
+      };
+      // 요약의 그룹 문장: 누르면 '그룹별' 탭의 그 칸으로 가서 강조한다 (100칸은 칸을 눌러야 좁혀진다)
+      const onSeg = (dim, b) => {
+        root.querySelector("[data-slot=finds-dim]").textContent = `${PL.DIMS[dim].label} 기준 · AI 패널 결과`;
+        const box = root.querySelector("[data-slot=finds]");
+        box.innerHTML = b.finds;
+        box.querySelectorAll("[data-grp]").forEach(x => x.addEventListener("click", () => {
+          open("group");
+          const segs = root.querySelector("[data-slot=segs]");
+          const cell = segs.querySelector(`button[data-grp="${x.dataset.grp}"][data-screen="${x.dataset.screen || "done"}"]`);
+          segs.querySelectorAll(".spot").forEach(c => c.classList.remove("spot"));
+          if (!cell) return;
+          cell.classList.add("spot");
+          cell.scrollIntoView({ behavior: motion(), block: "center" });
+          cell.focus({ preventScroll: true });
+        }));
+      };
+      mountReport(root, { reveal, onSeg });
     },
   };
 })();

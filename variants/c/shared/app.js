@@ -175,7 +175,8 @@
     const cntOf = (list, k) => (list.find(x => x[0] === k) || [0, 0])[1];
     const pctOf = (list, k, tot) => Math.round(cntOf(list, k) / tot * 100);
     // 실제 참가자는 12~15명뿐이라 비율보다 사람 수로 적는다 (기획서 4-7: 비율이 아니라 순위를 본다)
-    const reasons = `<div class="reasons">${reasonKeys.map(k => { const a = pctOf(rep.aiReasons, k, rep.n), r = pctOf(rep.realReasons, k, rep.realN); return `<button type="button" class="reason" data-reason="${k}"><span class="r-name">${PL.DROP[k]}</span><span class="r-bars"><i class="r-ai" style="width:${a / maxR}%"></i><i class="r-real" style="width:${r / maxR}%"></i></span><span class="r-num">AI ${cntOf(rep.aiReasons, k)}/${rep.n}명 · 실제 ${cntOf(rep.realReasons, k)}/${rep.realN}명</span></button>`; }).join("")}</div>`;
+    const reasonList = keys => `<div class="reasons">${keys.map(k => { const a = pctOf(rep.aiReasons, k, rep.n), r = pctOf(rep.realReasons, k, rep.realN); return `<button type="button" class="reason" data-reason="${k}"><span class="r-name">${PL.DROP[k]}</span><span class="r-bars"><i class="r-ai" style="width:${a / maxR}%"></i><i class="r-real" style="width:${r / maxR}%"></i></span><span class="r-num">AI ${cntOf(rep.aiReasons, k)}/${rep.n}명 · 실제 ${cntOf(rep.realReasons, k)}/${rep.realN}명</span></button>`; }).join("")}</div>`;
+    const reasons = reasonList(reasonKeys), reasons3 = reasonList(reasonKeys.slice(0, 3));
     const G = { yesDone: "쓰겠다 · 끝까지 감", yesDrop: "쓰겠다 · 중간에 그만둠", noDone: "망설임 · 끝까지 감", noDrop: "망설임 · 그만둠" };
     const gOf = id => Object.keys(rep.groups).find(k => rep.groups[k].includes(id));
     const grid = `<div class="grid100" role="list" aria-label="AI 패널 ${rep.n}명">${rs.map(r => `<button type="button" role="listitem" class="cell g-${gOf(r.id)}" data-id="${r.id}" data-reason="${r.act.end.reason || ""}" data-screen="${r.act.end.result === "drop" ? r.act.end.screen : ""}" title="${r.id}"></button>`).join("")}</div>
@@ -202,7 +203,7 @@
       <div class="c-note">참여 ${rep.realN}/15명 · 예시 데이터 · <a href="#/p/demo">참가자 화면 미리보기</a></div></div>`;
     const cg = PL.compareGroups(S.panel);
     const segDim = S.segDim || (cg.ok ? cg.dim : "age");
-    return { rep, reasons, grid, person, gapLine, gapText, trust, calib, ask, invite, funnel: CH.funnel(rep, CH.narrow() ? { w: 380 } : {}), firstId: rep.groups.yesDrop[0] || rs[0].id, segDim, segs: segBlock(segDim) };
+    return { rep, reasons, reasons3, grid, person, gapLine, gapText, trust, calib, ask, invite, funnel: CH.funnel(rep, CH.narrow() ? { w: 380 } : {}), firstId: rep.groups.yesDrop[0] || rs[0].id, segDim, segs: segBlock(segDim) };
   }
   // 그룹별로 보기: 위에는 눈에 띄는 그룹 문장, 아래에는 그룹 × 화면 표
   function segBlock(dim) {
@@ -218,15 +219,19 @@
     const note = `칸의 숫자는 그 화면에서 그만둔 사람 수입니다. ${sg.minGroup}명 미만인 그룹은 흐리게 표시하고 문장에서 뺍니다. AI 패널 기준이며 실제 참가자로 검증되지 않았습니다.${cg.ok ? " 전체 비율은 그룹마다 같은 인원을 뽑은 것을 공개 분포 비중으로 보정한 값입니다." : ""}`;
     return { pick, finds, table: `<div class="seg-table-wrap"><table class="seg-table"><thead>${head}</thead><tbody>${allRow}${rows}</tbody></table></div>`, note, groupOf: sg.groupOf };
   }
-  function mountReport(root) {
+  // o.reveal(f): 100칸을 좁힌 뒤 불린다. 시안이 탭을 쓰면 여기서 '사람별' 탭을 연다. 없으면 기존처럼 100칸으로 스크롤한다.
+  // o.onSeg(dim, block): 그룹별 영역을 다시 그린 뒤 불린다 (요약에 문장을 따로 둘 때 쓴다).
+  function mountReport(root, o = {}) {
     const parts = reportParts();
     const show = id => { const el = root.querySelector("[data-slot=person]"); if (el) el.innerHTML = parts.person(id); root.querySelectorAll(".cell").forEach(c => c.classList.toggle("picked", c.dataset.id === id)); };
     root.querySelectorAll(".cell").forEach(c => c.addEventListener("click", () => show(c.dataset.id)));
+    const shown = () => root.querySelectorAll(".cell:not(.dim)").length;
     const lit = (attr, v, btn) => {
       const on = !btn.classList.contains("on");
-      root.querySelectorAll(".reason, .frow").forEach(b => b.classList.remove("on"));
+      root.querySelectorAll(".reason, .frow, [data-slot=segs] [data-grp]").forEach(b => b.classList.remove("on"));
       root.querySelectorAll(".cell").forEach(c => c.classList.toggle("dim", on && c.dataset[attr] !== v));
       if (on) btn.classList.add("on");
+      if (o.reveal) o.reveal({ kind: attr, value: v, on, count: shown() });
     };
     root.querySelectorAll(".reason").forEach(b => b.addEventListener("click", () => lit("reason", b.dataset.reason, b)));
     root.querySelectorAll(".frow").forEach(b => {
@@ -246,8 +251,8 @@
     const wireSeg = (dim) => {
       if (!segBox) return;
       const b = segBlock(dim);
-      segBox.querySelector("[data-part=pick]").innerHTML = b.pick; segBox.querySelector("[data-part=finds]").innerHTML = b.finds;
-      segBox.querySelector("[data-part=table]").innerHTML = b.table; segBox.querySelector("[data-part=note]").textContent = b.note;
+      const put = (part, v, txt) => { const el = segBox.querySelector(`[data-part=${part}]`); if (el) el[txt ? "textContent" : "innerHTML"] = v; };
+      put("pick", b.pick); put("finds", b.finds); put("table", b.table); put("note", b.note, true);
       segBox.querySelectorAll("[data-dim]").forEach(x => x.addEventListener("click", () => { S.segDim = x.dataset.dim; save(); wireSeg(x.dataset.dim); }));
       segBox.querySelectorAll("[data-grp]").forEach(x => x.addEventListener("click", () => {
         const on = !x.classList.contains("on");
@@ -260,8 +265,10 @@
         });
         const first = on && [...root.querySelectorAll(".cell")].find(c => !c.classList.contains("dim"));
         if (first) show(first.dataset.id);
+        if (o.reveal) { o.reveal({ kind: "group", dim, value: g, screen: sc, on, count: shown() }); return; }
         const grid = root.querySelector(".grid100"); if (on && grid) grid.scrollIntoView({ behavior: "smooth", block: "center" });
       }));
+      if (o.onSeg) o.onSeg(dim, b);
     };
     wireSeg(parts.segDim);
     show(parts.firstId);
